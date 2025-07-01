@@ -1,5 +1,8 @@
-mod lexer;
 mod repl;
+mod lexer;
+mod object;
+mod integer;
+mod float;
 
 use repl::Repl;
 use std::env;
@@ -15,7 +18,7 @@ fn main() {
         let filename = &args[1];
         compile_file(filename);
     } else {
-        let repl = Repl::new();
+        let mut repl = Repl::new();
         repl.start();
     }
 }

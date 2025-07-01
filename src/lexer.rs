@@ -61,16 +61,16 @@ pub enum Token {
     #[regex("[a-zA-Z][a-zA-Z0-9_]*")]
     Identifier,
 
-    // Example: 123, -42
-    #[regex(r"[+-]?[0-9]+")]
+    // Example: 123
+    #[regex(r"[0-9]+")]
     Integer,
 
-    // Example: 123.45, -1.2e3, 4.5E+6
-    #[regex(r"[+-]?(?:[0-9]+\.[0-9]+(?:[eE][+-]?[0-9]+)?|[0-9]+(?:[eE][+-]?[0-9]+))")]
+    // Example: 123.45, 4.5E+6
+    #[regex(r"(?:[0-9]+\.[0-9]+(?:[eE][+-]?[0-9]+)?|[0-9]+(?:[eE][+-]?[0-9]+))")]
     Float,
 
     // Example: 2r1010, 16rA000
-    #[regex(r"[+-]?[0-9]+r[0-9A-Fa-f]+")]
+    #[regex(r"[0-9]+r[0-9A-Fa-f]+")]
     RadixNumber,
 
     // Example: 'hello', 'it''s fine'

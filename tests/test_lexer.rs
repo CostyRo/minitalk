@@ -85,7 +85,7 @@ mod tests {
     fn test_extra_code() {
         let extra_code = r#"
         < > <= >= == :=
-        -42 123.45 1.2e3 16rA000 2r1010
+        42 123.45 1.2e3 16rA000 2r1010
         'he''llo' #'symbol' $x
         #($a #a 'b' 2 2.0) #[1 2 3]
         "This is a comment"
@@ -101,7 +101,7 @@ mod tests {
             (Token::GreaterThanEqual, ">="),
             (Token::DoubleEquals, "=="),
             (Token::Assignment, ":="),
-            (Token::Integer, "-42"),
+            (Token::Integer, "42"),
             (Token::Float, "123.45"),
             (Token::Float, "1.2e3"),
             (Token::RadixNumber, "16rA000"),

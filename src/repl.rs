@@ -119,6 +119,8 @@ impl Repl {
                                 } else {
                                     println!("No 'add' function found");
                                 }
+                            } else {
+                                sign = false;
                             }
                         } else if matches!(token, Token::Minus) {
                             if let Some(last_obj) = self.stack.pop() {
@@ -129,7 +131,7 @@ impl Repl {
                                     println!("No 'sub' function found");
                                 }
                             } else {
-                                sign = true;
+                                sign = !sign;
                             }
                         }
                     }

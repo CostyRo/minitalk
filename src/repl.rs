@@ -114,6 +114,15 @@ impl Repl {
                                     println!("No 'add' function found");
                                 }
                             }
+                        } else if matches!(token, Token::Minus) {
+                            if let Some(last_obj) = self.stack.pop() {
+                                if let Some(sub_func) = last_obj.get::<Arc<dyn Fn(&Box<dyn Any>) -> Object + Send + Sync>>("sub") {
+                                    let sub_func_cloned = sub_func.clone();
+                                    self.last_message = Some(Box::new(sub_func_cloned) as Box<dyn Any>);
+                                } else {
+                                    println!("No 'sub' function found");
+                                }
+                            }
                         }
                     }
                     if let Some(last) = self.stack.pop() {

@@ -1,4 +1,4 @@
-use smalltalk_compiler::lexer::{Lexer, Token};
+use smalltalk_compiler::lexer::{ Lexer, Token };
 
 #[cfg(test)]
 mod tests {
@@ -6,8 +6,8 @@ mod tests {
 
     #[test]
     fn test_postcard() {
-        let postcard = 
-"exampleWithNumber: x
+        let postcard =
+            "exampleWithNumber: x
     | y |
     true & false not & (nil isNil) ifFalse: [self halt].
     y := self size + super size.
@@ -75,7 +75,7 @@ mod tests {
             (Token::Caret, "^"),
             (Token::Identifier, "x"),
             (Token::LessThan, "<"),
-            (Token::Identifier, "y"),
+            (Token::Identifier, "y")
         ];
 
         assert_token_seq(&tokens, &expected_sequence);
@@ -83,7 +83,8 @@ mod tests {
 
     #[test]
     fn test_extra_code() {
-        let extra_code = r#"
+        let extra_code =
+            r#"
         < > <= >= == :=
         42 123.45 1.2e3 16rA000 2r1010
         'he''llo' #'symbol' $x
@@ -111,7 +112,7 @@ mod tests {
             (Token::Character, "$x"),
             (Token::Array, "#($a #a 'b' 2 2.0)"),
             (Token::ByteArray, "#[1 2 3]"),
-            (Token::Comment, "\"This is a comment\""),
+            (Token::Comment, "\"This is a comment\"")
         ];
 
         assert_token_seq(&tokens, &expected);
@@ -142,18 +143,25 @@ mod tests {
             actual.len()
         );
 
-        for (i, ((actual_tok, actual_text), (expected_tok, expected_text))) in
-            actual.iter().zip(expected.iter()).enumerate()
-        {
+        for (i, ((actual_tok, actual_text), (expected_tok, expected_text))) in actual
+            .iter()
+            .zip(expected.iter())
+            .enumerate() {
             assert_eq!(
-                actual_tok, expected_tok,
+                actual_tok,
+                expected_tok,
                 "Token at position {}: expected {:?} but got {:?}",
-                i, expected_tok, actual_tok
+                i,
+                expected_tok,
+                actual_tok
             );
             assert_eq!(
-                actual_text, expected_text,
+                actual_text,
+                expected_text,
                 "Text at position {}: expected '{}' but got '{}'",
-                i, expected_text, actual_text
+                i,
+                expected_text,
+                actual_text
             );
         }
     }

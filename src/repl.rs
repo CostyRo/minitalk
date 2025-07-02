@@ -28,7 +28,8 @@ impl Repl {
         while let Some((token, _span)) = lexer.next_token() {
             if matches!(token, Token::Integer) {
                 let value = lexer.slice().to_string().parse::<i64>().unwrap();
-                let int = if sign { Integer::new(-1 * value) } else { Integer::new(value) };
+                let value = if sign { -1 * value } else { value };
+                let int = Integer::new(value);
                 sign = false;
 
                 if let Some(last_msg) = &last_message {
@@ -49,7 +50,8 @@ impl Repl {
                 }
             } else if matches!(token, Token::Float) {
                 let value = lexer.slice().to_string().parse::<f64>().unwrap();
-                let float = if sign { Float::new(-1.0 * value) } else { Float::new(value) };
+                let value = if sign { -1.0 * value } else { value };
+                let float = Float::new(value);
                 sign = false;
 
                 if let Some(last_msg) = &last_message {
@@ -77,11 +79,8 @@ impl Repl {
                             continue;
                         }
                         if let Ok(value) = i64::from_str_radix(digits, base) {
-                            let int = if sign {
-                                Integer::new(-1 * value)
-                            } else {
-                                Integer::new(value)
-                            };
+                            let value = if sign { -1 * value } else { value };
+                            let int = Integer::new(value);
                             sign = false;
 
                             if let Some(last_msg) = &last_message {
@@ -125,7 +124,11 @@ impl Repl {
                     sign = false;
                 }
             } else if matches!(token, Token::Minus) {
-                if let Some(last_obj) = stack.pop() {
+                if last_message.is_some(){
+                    sign = !sign;
+                    continue;
+                }
+                if let Some(last_obj) = stack.pop(){
                     if
                         let Some(sub_func) = last_obj.get::<
                             Arc<dyn (Fn(&Box<dyn Any>) -> Object) + Send + Sync>
@@ -138,6 +141,21 @@ impl Repl {
                     }
                 } else {
                     sign = !sign;
+                }
+            } else if matches!(token, Token::Star) {
+                if let Some(last_obj) = stack.pop() {
+                    if
+                        let Some(mul_func) = last_obj.get::<
+                            Arc<dyn (Fn(&Box<dyn Any>) -> Object) + Send + Sync>
+                        >("mul")
+                    {
+                        let mul_func_cloned = mul_func.clone();
+                        last_message = Some(Box::new(mul_func_cloned) as Box<dyn Any>);
+                    } else {
+                        println!("No 'mul' function found");
+                    }
+                } else {
+                    sign = false;
                 }
             }
         }

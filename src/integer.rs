@@ -1,4 +1,4 @@
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::sync::Arc;
 
 use crate::float::Float;

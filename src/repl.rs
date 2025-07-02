@@ -1,4 +1,4 @@
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::sync::Arc;
 
 use crate::object::Object;
@@ -108,7 +108,7 @@ impl Repl {
                         println!("Invalid radix number format: '{}'", slice);
                     }
                 } else if matches!(token, Token::Plus) {
-                    if let Some(mut last_obj) = self.stack.pop() {
+                    if let Some(last_obj) = self.stack.pop() {
                         if let Some(add_func) = last_obj.get::<Arc<dyn Fn(&Box<dyn Any>) -> Object + Send + Sync>>("add") {
                             let add_func_cloned = add_func.clone();
                             self.last_message = Some(Box::new(add_func_cloned) as Box<dyn Any>);

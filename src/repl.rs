@@ -31,17 +31,20 @@ impl Repl {
             let readline = rl.readline(">>> ");
             match readline {
                 Ok(line) => {
+                    let mut sign = false;
+
                     let input = line.trim();
                     if input == "exit" {
                         break;
                     }
                     let _ = rl.add_history_entry(input);
-
                     let mut lexer = Lexer::new(input);
                     while let Some((token, span)) = lexer.next_token() {
                         if matches!(token, Token::Integer) {
-                            let value = lexer.slice().to_string().parse::<i64>().unwrap();
+                            let value = if sign {"-".to_owned()+lexer.slice()} else {lexer.slice().to_string()};
+                            let value = value.parse::<i64>().unwrap();
                             let int = Integer::new(value);
+                            sign = false;
 
                             if let Some(last_msg) = &self.last_message {
                                 if let Some(func) = last_msg.downcast_ref::<Arc<dyn Fn(&Box<dyn Any>) -> Object + Send + Sync>>() {
@@ -57,8 +60,10 @@ impl Repl {
                                 self.stack.push(int.obj);
                             }
                         } else if matches!(token, Token::Float) {
-                            let value = lexer.slice().to_string().parse::<f64>().unwrap();
+                            let value = if sign {"-".to_owned()+lexer.slice()} else {lexer.slice().to_string()};
+                            let value = value.parse::<f64>().unwrap();
                             let float = Float::new(value);
+                            sign = false;
 
                             if let Some(last_msg) = &self.last_message {
                                 if let Some(func) = last_msg.downcast_ref::<Arc<dyn Fn(&Box<dyn Any>) -> Object + Send + Sync>>() {
@@ -82,7 +87,8 @@ impl Repl {
                                         continue;
                                     }
                                     if let Ok(value) = i64::from_str_radix(digits, base) {
-                                        let int = Integer::new(value);
+                                        let int = if sign {Integer::new(-1*value)} else {Integer::new(value)};
+                                        sign = false;
 
                                         if let Some(last_msg) = &self.last_message {
                                             if let Some(func) = last_msg.downcast_ref::<Arc<dyn Fn(&Box<dyn Any>) -> Object + Send + Sync>>() {
@@ -122,6 +128,8 @@ impl Repl {
                                 } else {
                                     println!("No 'sub' function found");
                                 }
+                            } else {
+                                sign = true;
                             }
                         }
                     }

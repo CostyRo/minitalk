@@ -1,7 +1,8 @@
 [package]
-name = "smalltalk_compiler"
+name = "microtalk"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 logos = "0.15.0"
+rustyline = "13.0"

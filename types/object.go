@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"unsafe"
 )
 
@@ -65,11 +66,12 @@ func (o *Object) String() string {
 		if v, ok := o.selfValue.(bool); ok {
 			return fmt.Sprintf("%t", v)
 		}
-	case "error":
-		if v, ok := o.selfValue.(string); ok {
-			return fmt.Sprintf("Error: %s", v)
-		}
 	default:
+		if strings.HasSuffix(o.class, "error") {
+			if msg, ok := o.selfValue.(string); ok {
+				return fmt.Sprintf("%s: %s", o.class, msg)
+			}
+		}
 		if o.selfValue != nil {
 			ptr := reflect.ValueOf(o.selfValue).Pointer()
 			return fmt.Sprintf("<%s at %p>", o.class, unsafe.Pointer(ptr))

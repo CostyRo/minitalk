@@ -6,22 +6,24 @@ import (
 	"strings"
 
 	"github.com/peterh/liner"
+
+	"minitalk/types"
 )
 
 type Repl struct {
-	globalScope map[string]Object
+	globalScope map[string]types.Object
 	liner       *liner.State
 }
 
 func NewRepl() *Repl {
 	return &Repl{
-		globalScope: make(map[string]Object),
+		globalScope: make(map[string]types.Object),
 		liner:       liner.NewLiner(),
 	}
 }
 
 func (r *Repl) processLine(input string) *string {
-	var stack []Object
+	var stack []types.Object
 	var lastMessage any
 	sign := false
 
@@ -37,10 +39,10 @@ func (r *Repl) processLine(input string) *string {
 				value = -value
 				sign = false
 			}
-			intObj := NewIntegerObject(value)
+			intObj := types.NewIntegerObject(value)
 			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
 				result := fn(value)
-				objResult, ok := result.(Object)
+				objResult, ok := result.(types.Object)
 				if !ok {
 					fmt.Println("function did not return Object")
 					return nil
@@ -57,10 +59,10 @@ func (r *Repl) processLine(input string) *string {
 				value = -value
 				sign = false
 			}
-			floatObj := NewFloatObject(value)
+			floatObj := types.NewFloatObject(value)
 			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
 				result := fn(value)
-				objResult, ok := result.(Object)
+				objResult, ok := result.(types.Object)
 				if !ok {
 					fmt.Println("function did not return Object")
 					return nil
@@ -91,10 +93,10 @@ func (r *Repl) processLine(input string) *string {
 				num = -num
 				sign = false
 			}
-			intObj := NewIntegerObject(num)
+			intObj := types.NewIntegerObject(num)
 			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
 				result := fn(num)
-				objResult, ok := result.(Object)
+				objResult, ok := result.(types.Object)
 				if !ok {
 					fmt.Println("function did not return Object")
 					return nil

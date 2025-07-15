@@ -107,6 +107,36 @@ func (r *Repl) processLine(input string) *string {
 				stack = append(stack, intObj.Object)
 			}
 
+		case True:
+			boolObj := types.NewBoolObject(true)
+			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
+				result := fn(true)
+				objResult, ok := result.(types.Object)
+				if !ok {
+					fmt.Println("function did not return Object")
+					return nil
+				}
+				stack = append(stack, objResult)
+				lastMessage = nil
+			} else {
+				stack = append(stack, boolObj.Object)
+			}
+
+		case False:
+			boolObj := types.NewBoolObject(false)
+			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
+				result := fn(false)
+				objResult, ok := result.(types.Object)
+				if !ok {
+					fmt.Println("function did not return Object")
+					return nil
+				}
+				stack = append(stack, objResult)
+				lastMessage = nil
+			} else {
+				stack = append(stack, boolObj.Object)
+			}
+
 		case Plus:
 			if len(stack) == 0 {
 				sign = false

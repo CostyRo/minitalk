@@ -42,7 +42,7 @@ def main():
             print("")
 
     if all_pass and len(output_lines) == len(expected_outputs):
-        print("All tests passed!")
+        print(f"All {min_len} tests passed!")
     else:
         if len(output_lines) != len(expected_outputs):
             print(f"Warning: output lines count ({len(output_lines)}) != expected count ({len(expected_outputs)})")

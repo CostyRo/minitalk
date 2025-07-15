@@ -10,7 +10,6 @@ func NewErrorObject(message string) *ErrorObject {
 }
 
 func (e *ErrorObject) GetMessage() string {
-	msg, ok := e.GetSelfValue[string]()
+	msg, _ := GetSelfValue[string](&e.Object)
 	return msg
 }
-

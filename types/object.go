@@ -61,6 +61,14 @@ func (o *Object) String() string {
 		if v, ok := o.selfValue.(float64); ok {
 			return fmt.Sprintf("%.10f", v)
 		}
+	case "bool":
+		if v, ok := o.selfValue.(bool); ok {
+			return fmt.Sprintf("%t", v)
+		}
+	case "error":
+		if v, ok := o.selfValue.(string); ok {
+			return fmt.Sprintf("Error: %s", v)
+		}
 	default:
 		if o.selfValue != nil {
 			ptr := reflect.ValueOf(o.selfValue).Pointer()

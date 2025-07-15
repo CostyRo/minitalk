@@ -8,22 +8,23 @@ import (
 	"github.com/peterh/liner"
 
 	"minitalk/types"
+	"minitalk/types/core"
 )
 
 type Repl struct {
-	globalScope map[string]types.Object
+	globalScope map[string]core.Object
 	liner       *liner.State
 }
 
 func NewRepl() *Repl {
 	return &Repl{
-		globalScope: make(map[string]types.Object),
+		globalScope: make(map[string]core.Object),
 		liner:       liner.NewLiner(),
 	}
 }
 
 func (r *Repl) processLine(input string) *string {
-	var stack []types.Object
+	var stack []core.Object
 	var lastMessage any
 	sign := false
 
@@ -42,7 +43,7 @@ func (r *Repl) processLine(input string) *string {
 			intObj := types.NewIntegerObject(value)
 			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
 				result := fn(value)
-				objResult, ok := result.(types.Object)
+				objResult, ok := result.(core.Object)
 				if !ok {
 					fmt.Println("function did not return Object")
 					return nil
@@ -62,7 +63,7 @@ func (r *Repl) processLine(input string) *string {
 			floatObj := types.NewFloatObject(value)
 			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
 				result := fn(value)
-				objResult, ok := result.(types.Object)
+				objResult, ok := result.(core.Object)
 				if !ok {
 					fmt.Println("function did not return Object")
 					return nil
@@ -96,7 +97,7 @@ func (r *Repl) processLine(input string) *string {
 			intObj := types.NewIntegerObject(num)
 			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
 				result := fn(num)
-				objResult, ok := result.(types.Object)
+				objResult, ok := result.(core.Object)
 				if !ok {
 					fmt.Println("function did not return Object")
 					return nil
@@ -111,7 +112,7 @@ func (r *Repl) processLine(input string) *string {
 			boolObj := types.NewBoolObject(true)
 			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
 				result := fn(true)
-				objResult, ok := result.(types.Object)
+				objResult, ok := result.(core.Object)
 				if !ok {
 					fmt.Println("function did not return Object")
 					return nil
@@ -126,7 +127,7 @@ func (r *Repl) processLine(input string) *string {
 			boolObj := types.NewBoolObject(false)
 			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
 				result := fn(false)
-				objResult, ok := result.(types.Object)
+				objResult, ok := result.(core.Object)
 				if !ok {
 					fmt.Println("function did not return Object")
 					return nil
@@ -194,6 +195,25 @@ func (r *Repl) processLine(input string) *string {
 			fn, ok := val.(func(interface{}) interface{})
 			if !ok {
 				fmt.Println("'mul' is not a valid function")
+				continue
+			}
+			lastMessage = fn
+
+		case Slash:
+			if len(stack) == 0 {
+				sign = false
+				continue
+			}
+			last := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			val, ok := last.Get("div")
+			if !ok {
+				fmt.Println("no 'div' function found")
+				continue
+			}
+			fn, ok := val.(func(interface{}) interface{})
+			if !ok {
+				fmt.Println("'div' is not a valid function")
 				continue
 			}
 			lastMessage = fn

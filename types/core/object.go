@@ -1,4 +1,4 @@
-package types
+package core
 
 import (
 	"fmt"
@@ -54,20 +54,20 @@ func (o *Object) PropertyNames() []string {
 
 func (o *Object) String() string {
 	switch o.class {
-	case "integer":
+	case "Integer":
 		if v, ok := o.selfValue.(int64); ok {
 			return fmt.Sprintf("%d", v)
 		}
-	case "float":
+	case "Float":
 		if v, ok := o.selfValue.(float64); ok {
 			return fmt.Sprintf("%.10f", v)
 		}
-	case "bool":
+	case "Bool":
 		if v, ok := o.selfValue.(bool); ok {
 			return fmt.Sprintf("%t", v)
 		}
 	default:
-		if strings.HasSuffix(o.class, "error") {
+		if strings.HasSuffix(o.class, "Error") {
 			if msg, ok := o.selfValue.(string); ok {
 				return fmt.Sprintf("%s: %s", o.class, msg)
 			}

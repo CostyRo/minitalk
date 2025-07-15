@@ -1,10 +1,12 @@
 package types
 
+import "minitalk/types/core"
+
 type BoolObject struct {
-	Object
+	core.Object
 }
 
 func NewBoolObject(value bool) *BoolObject {
-	obj := NewObject(value, "bool")
+	obj := core.NewObject(value, "Bool")
 	return &BoolObject{*obj}
 }

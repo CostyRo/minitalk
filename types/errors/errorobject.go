@@ -1,12 +1,16 @@
 package errors
 
-import "minitalk/types"
+import "minitalk/types/core"
 
 type Error struct {
-	types.Object
+	core.Object
 }
 
-func NewErrorObject(msg string) *Error {
-	obj := types.NewObject(msg, "error")
+func NewErrorObject(msg string, class ...string) *Error {
+	className := "Error"
+	if len(class) > 0 && class[0] != "" {
+		className = class[0]
+	}
+	obj := core.NewObject(msg, className)
 	return &Error{*obj}
 }

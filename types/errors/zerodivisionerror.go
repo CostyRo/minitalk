@@ -1,5 +1,5 @@
 package errors
 
 func NewZeroDivisionError() *Error {
-	return NewErrorObject("ZeroDivisionError: division by zero")
+	return NewErrorObject("division by zero","ZeroDivisionError")
 }

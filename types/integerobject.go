@@ -1,40 +1,65 @@
 package types
 
+import (
+	"minitalk/types/core"
+	"minitalk/types/errors"
+)
+
 type IntegerObject struct {
-	Object
+	core.Object
 }
 
 func NewIntegerObject(value int64) *IntegerObject {
-	obj := NewObject(value, "integer")
+	obj := core.NewObject(value, "Integer")
 
 	obj.Set("add", func(other interface{}) interface{} {
-		if b, ok := other.(int64); ok {
+		switch b := other.(type) {
+		case int64:
 			return NewIntegerObject(value + b).Object
-		}
-		if b, ok := other.(float64); ok {
+		case float64:
 			return NewFloatObject(float64(value) + b).Object
+		default:
+			panic("Unsupported operand for IntegerObject.add")
 		}
-		panic("Unsupported operand for IntegerObject.add")
 	})
 
 	obj.Set("sub", func(other interface{}) interface{} {
-		if b, ok := other.(int64); ok {
+		switch b := other.(type) {
+		case int64:
 			return NewIntegerObject(value - b).Object
-		}
-		if b, ok := other.(float64); ok {
+		case float64:
 			return NewFloatObject(float64(value) - b).Object
+		default:
+			panic("Unsupported operand for IntegerObject.sub")
 		}
-		panic("Unsupported operand for IntegerObject.sub")
 	})
 
 	obj.Set("mul", func(other interface{}) interface{} {
-		if b, ok := other.(int64); ok {
+		switch b := other.(type) {
+		case int64:
 			return NewIntegerObject(value * b).Object
-		}
-		if b, ok := other.(float64); ok {
+		case float64:
 			return NewFloatObject(float64(value) * b).Object
+		default:
+			panic("Unsupported operand for IntegerObject.mul")
 		}
-		panic("Unsupported operand for IntegerObject.mul")
+	})
+
+	obj.Set("div", func(other interface{}) interface{} {
+		switch b := other.(type) {
+		case int64:
+			if b == 0 {
+				return errors.NewZeroDivisionError().Object
+			}
+			return NewIntegerObject(value / b).Object
+		case float64:
+			if b == 0.0 {
+				return errors.NewZeroDivisionError().Object
+			}
+			return NewFloatObject(float64(value) / b).Object
+		default:
+			panic("Unsupported operand for IntegerObject.div")
+		}
 	})
 
 	return &IntegerObject{*obj}

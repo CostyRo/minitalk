@@ -158,6 +158,22 @@ func (r *Repl) processLine(input string) *string {
 				stack = append(stack, boolObj.Object)
 			}
 
+		case Nil:
+			nilObj := core.NewObject(nil, "Nil")
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(*nilObj)
+				objResult, ok := result.(core.Object)
+				if !ok {
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Nil", lastType))
+					stack = append(stack, err.Object)
+					continue
+				}
+				stack = append(stack, objResult)
+				lastMessage = nil
+			} else {
+				stack = append(stack, *nilObj)
+			}
+
 		case Plus:
 			if len(stack) == 0 {
 				sign = false

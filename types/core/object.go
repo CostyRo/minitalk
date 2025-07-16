@@ -12,11 +12,13 @@ type Object struct {
 }
 
 func NewObject(Self interface{}, Class string) *Object {
-	return &Object{
-		Self:  Self,
+	obj := &Object{
+		Self:       Self,
 		properties: make(map[string]interface{}),
 		Class:      Class,
 	}
+	obj.Set("isNil", Self == nil)
+	return obj
 }
 
 func (o *Object) Set(key string, value interface{}) {

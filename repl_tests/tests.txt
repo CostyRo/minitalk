@@ -1,4 +1,12 @@
 # Syntax Errors
+*1,SyntaxError: invalid syntax
+/1,SyntaxError: invalid syntax
+&1,SyntaxError: invalid syntax
+>1,SyntaxError: invalid syntax
+<1,SyntaxError: invalid syntax
+>=1,SyntaxError: invalid syntax
+<=1,SyntaxError: invalid syntax
+==1,SyntaxError: invalid syntax
 2r2,Syntax error: invalid number in base 2
 2r2+1,Syntax error: invalid number in base 2
 0r1,Syntax error: invalid base 0
@@ -24,10 +32,15 @@ false,false
 1.0/0.0,ZeroDivisionError: division by zero
 
 # Type Errors
-true+1,TypeError: Message doesn't exist for Bool and Integer
-1+true,TypeError: Message doesn't exist for Integer and Bool
-false+1,TypeError: Message doesn't exist for Bool and Integer
-1+false,TypeError: Message doesn't exist for Integer and Bool
+true+1,TypeError: Message doesn't exists for Bool and Integer
+1+true,TypeError: Message doesn't exists for Integer and Bool
+false+1,TypeError: Message doesn't exists for Bool and Integer
+1+false,TypeError: Message doesn't exists for Integer and Bool
+
+# Periods
+1.,1
+1. 2,1\n2
+1.1.1,1.1000000000\n1
 
 # Addition
 1+1,2

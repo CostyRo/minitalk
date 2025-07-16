@@ -25,11 +25,14 @@ func NewRepl() *Repl {
 	}
 }
 
-func (r *Repl) processLine(input string) *string {
+func (r *Repl) processLine(input string) []string {
+	var results []string
+
 	var stack []core.Object
 	var lastType string
 	var lastMessage any
 	typeError := false
+	messageError := false
 	sign := false
 
 	tokens := Lex(input)
@@ -38,9 +41,27 @@ func (r *Repl) processLine(input string) *string {
 		case Whitespace:
 			continue
 
+		case Period:
+			if len(stack) > 0 {
+        		result := stack[len(stack)-1].String()
+        		results = append(results, result)
+    		}
+
+			stack = nil
+			lastMessage = nil
+			lastType = ""
+			typeError = false
+			messageError = false
+			sign = false
+
 		case Integer:
 			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Integer", lastType))
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			if messageError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
 				stack = append(stack, err.Object)
 				continue
 			}
@@ -54,7 +75,7 @@ func (r *Repl) processLine(input string) *string {
 				result := fn(intObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Integer", lastType))
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))
 					stack = append(stack, err.Object)
 					continue
 				}
@@ -66,7 +87,12 @@ func (r *Repl) processLine(input string) *string {
 
 		case Float:
 			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Float", lastType))
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Float", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			if messageError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
 				stack = append(stack, err.Object)
 				continue
 			}
@@ -80,7 +106,7 @@ func (r *Repl) processLine(input string) *string {
 				result := fn(floatObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Float", lastType))
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Float", lastType))
 					stack = append(stack, err.Object)
 					continue
 				}
@@ -92,7 +118,12 @@ func (r *Repl) processLine(input string) *string {
 
 		case RadixNumber:
 			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Integer", lastType))
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			if messageError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
 				stack = append(stack, err.Object)
 				continue
 			}
@@ -116,7 +147,7 @@ func (r *Repl) processLine(input string) *string {
 				result := fn(intObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Integer", lastType))
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))
 					stack = append(stack, err.Object)
 					continue
 				}
@@ -127,12 +158,22 @@ func (r *Repl) processLine(input string) *string {
 			}
 
 		case True:
+			if typeError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Bool", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			if messageError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
 			boolObj := types.NewBoolObject(true)
 			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
 				result := fn(boolObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Bool", lastType))
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Bool", lastType))
 					stack = append(stack, err.Object)
 					continue
 				}
@@ -143,12 +184,22 @@ func (r *Repl) processLine(input string) *string {
 			}
 
 		case False:
+			if typeError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Bool", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			if messageError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
 			boolObj := types.NewBoolObject(false)
 			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
 				result := fn(boolObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Bool", lastType))
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Bool", lastType))
 					stack = append(stack, err.Object)
 					continue
 				}
@@ -159,12 +210,22 @@ func (r *Repl) processLine(input string) *string {
 			}
 
 		case Nil:
+			if typeError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Nil", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			if messageError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
 			nilObj := core.NewObject(nil, "Nil")
 			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
 				result := fn(*nilObj)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Nil", lastType))
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Nil", lastType))
 					stack = append(stack, err.Object)
 					continue
 				}
@@ -172,6 +233,20 @@ func (r *Repl) processLine(input string) *string {
 				lastMessage = nil
 			} else {
 				stack = append(stack, *nilObj)
+			}
+
+		case Identifier:
+			if len(stack) == 0 {
+				continue
+			} else {
+				last := stack[len(stack)-1]
+				stack = stack[:len(stack)-1]
+				lastType = last.Class
+				_, ok := last.Get(tok.Value)
+				if !ok {
+					messageError = true
+					continue
+				}
 			}
 
 		case Plus:
@@ -220,8 +295,8 @@ func (r *Repl) processLine(input string) *string {
 
 		case Star:
 			if len(stack) == 0 {
-				sign = false
-				continue
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
@@ -240,8 +315,8 @@ func (r *Repl) processLine(input string) *string {
 
 		case Slash:
 			if len(stack) == 0 {
-				sign = false
-				continue
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
@@ -260,7 +335,8 @@ func (r *Repl) processLine(input string) *string {
 		
 		case Ampersand:
 			if len(stack) == 0 {
-				continue
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
@@ -279,7 +355,8 @@ func (r *Repl) processLine(input string) *string {
 
 		case LessThan:
 			if len(stack) == 0 {
-				continue
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
@@ -298,7 +375,8 @@ func (r *Repl) processLine(input string) *string {
 
 		case GreaterThan:
 			if len(stack) == 0 {
-				continue
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
@@ -317,7 +395,8 @@ func (r *Repl) processLine(input string) *string {
 
 		case LessThanEqual:
 			if len(stack) == 0 {
-				continue
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
@@ -336,7 +415,8 @@ func (r *Repl) processLine(input string) *string {
 
 		case GreaterThanEqual:
 			if len(stack) == 0 {
-				continue
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
@@ -355,7 +435,8 @@ func (r *Repl) processLine(input string) *string {
 
 		case DoubleEquals:
 			if len(stack) == 0 {
-				continue
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
@@ -375,10 +456,10 @@ func (r *Repl) processLine(input string) *string {
 	}
 
 	if len(stack) > 0 {
-		result := stack[len(stack)-1].String()
-		return &result
+    	result := stack[len(stack)-1].String()
+    	results = append(results, result)
 	}
-	return nil
+	return results
 }
 
 func (r *Repl) Start() {
@@ -401,8 +482,9 @@ func (r *Repl) Start() {
 
 		r.liner.AppendHistory(input)
 
-		if output := r.processLine(input); output != nil {
-			fmt.Println(*output)
+		outputs := r.processLine(input)
+		for _, out := range outputs {
+    		fmt.Println(out)
 		}
 	}
 }

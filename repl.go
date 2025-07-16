@@ -241,6 +241,101 @@ func (r *Repl) processLine(input string) *string {
 				return nil
 			}
 			lastMessage = fn
+
+		case LessThan:
+			if len(stack) == 0 {
+				continue
+			}
+			last := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			lastType = last.Class
+			val, ok := last.Get("lt")
+			if !ok {
+				typeError = true
+				continue
+			}
+			fn, ok := val.(func(core.Object) interface{})
+			if !ok {
+				Log("COMPILER ERROR")
+				return nil
+			}
+			lastMessage = fn
+
+		case GreaterThan:
+			if len(stack) == 0 {
+				continue
+			}
+			last := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			lastType = last.Class
+			val, ok := last.Get("gt")
+			if !ok {
+				typeError = true
+				continue
+			}
+			fn, ok := val.(func(core.Object) interface{})
+			if !ok {
+				Log("COMPILER ERROR")
+				return nil
+			}
+			lastMessage = fn
+
+		case LessThanEqual:
+			if len(stack) == 0 {
+				continue
+			}
+			last := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			lastType = last.Class
+			val, ok := last.Get("le")
+			if !ok {
+				typeError = true
+				continue
+			}
+			fn, ok := val.(func(core.Object) interface{})
+			if !ok {
+				Log("COMPILER ERROR")
+				return nil
+			}
+			lastMessage = fn
+
+		case GreaterThanEqual:
+			if len(stack) == 0 {
+				continue
+			}
+			last := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			lastType = last.Class
+			val, ok := last.Get("ge")
+			if !ok {
+				typeError = true
+				continue
+			}
+			fn, ok := val.(func(core.Object) interface{})
+			if !ok {
+				Log("COMPILER ERROR")
+				return nil
+			}
+			lastMessage = fn
+
+		case DoubleEquals:
+			if len(stack) == 0 {
+				continue
+			}
+			last := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			lastType = last.Class
+			val, ok := last.Get("eq")
+			if !ok {
+				typeError = true
+				continue
+			}
+			fn, ok := val.(func(core.Object) interface{})
+			if !ok {
+				Log("COMPILER ERROR")
+				return nil
+			}
+			lastMessage = fn	
 		}
 	}
 

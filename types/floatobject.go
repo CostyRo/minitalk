@@ -74,5 +74,75 @@ func NewFloatObject(value float64) *FloatObject {
 		return nil
 	})
 
+	obj.Set("lt", func(other core.Object) interface{} {
+		switch other.Class {
+		case "Float":
+			if val, ok := other.Self.(float64); ok {
+				return NewBoolObject(value < val).Object
+			}
+		case "Integer":
+			if val, ok := other.Self.(int64); ok {
+				return NewBoolObject(value < float64(val)).Object
+			}
+		}
+		return nil
+	})
+
+	obj.Set("gt", func(other core.Object) interface{} {
+		switch other.Class {
+		case "Float":
+			if val, ok := other.Self.(float64); ok {
+				return NewBoolObject(value > val).Object
+			}
+		case "Integer":
+			if val, ok := other.Self.(int64); ok {
+				return NewBoolObject(value > float64(val)).Object
+			}
+		}
+		return nil
+	})
+
+	obj.Set("le", func(other core.Object) interface{} {
+		switch other.Class {
+		case "Float":
+			if val, ok := other.Self.(float64); ok {
+				return NewBoolObject(value <= val).Object
+			}
+		case "Integer":
+			if val, ok := other.Self.(int64); ok {
+				return NewBoolObject(value <= float64(val)).Object
+			}
+		}
+		return nil
+	})
+
+	obj.Set("ge", func(other core.Object) interface{} {
+		switch other.Class {
+		case "Float":
+			if val, ok := other.Self.(float64); ok {
+				return NewBoolObject(value >= val).Object
+			}
+		case "Integer":
+			if val, ok := other.Self.(int64); ok {
+				return NewBoolObject(value >= float64(val)).Object
+			}
+		}
+		return nil
+	})
+
+	obj.Set("eq", func(other core.Object) interface{} {
+		switch other.Class {
+		case "Float":
+			if val, ok := other.Self.(float64); ok {
+				return NewBoolObject(value == val).Object
+			}
+		case "Integer":
+			if val, ok := other.Self.(int64); ok {
+				return NewBoolObject(value == float64(val)).Object
+			}
+		}
+		return nil
+	})
+
 	return &FloatObject{*obj}
 }

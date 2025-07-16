@@ -241,6 +241,25 @@ func (r *Repl) processLine(input string) *string {
 				return nil
 			}
 			lastMessage = fn
+		
+		case Ampersand:
+			if len(stack) == 0 {
+				continue
+			}
+			last := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			lastType = last.Class
+			val, ok := last.Get("and")
+			if !ok {
+				typeError = true
+				continue
+			}
+			fn, ok := val.(func(core.Object) interface{})
+			if !ok {
+				Log("COMPILER ERROR")
+				return nil
+			}
+			lastMessage = fn
 
 		case LessThan:
 			if len(stack) == 0 {

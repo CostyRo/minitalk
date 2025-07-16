@@ -1,16 +1,39 @@
-# Errors
+# Syntax Errors
+2r2,Syntax error: invalid number in base 2
+2r2+1,Syntax error: invalid number in base 2
+0r1,Syntax error: invalid base 0
+0r1+1,Syntax error: invalid base 0
+37r1,Syntax error: invalid base 37
+
+# Literals
+-1,-1
+-1.0,-1.0000000000
+-2r1,-1
+++1,1
+--1,1
+---1,-1
++-1,-1
+-+1,1
+true,true
+false,false
+
+# Division Errors
 1/0,ZeroDivisionError: division by zero
 1.0/0,ZeroDivisionError: division by zero
 1/0.0,ZeroDivisionError: division by zero
 1.0/0.0,ZeroDivisionError: division by zero
+
+# Type Errors
+true+1,TypeError: Message doesn't exist for Bool and Integer
+1+true,TypeError: Message doesn't exist for Integer and Bool
+false+1,TypeError: Message doesn't exist for Bool and Integer
+1+false,TypeError: Message doesn't exist for Integer and Bool
 
 # Addition
 1+1,2
 1.0+1,2.0000000000
 1+1.0,2.0000000000
 1.0+1.0,2.0000000000
-
-# Starting plus sign
 +1+1,2
 
 # Substraction
@@ -19,17 +42,7 @@
 1.0-1,0.0000000000
 1.0-1.0,0.0000000000
 
-# Negative numbers
--1,-1
--1.0,-1.0000000000
--2r1,-1
-
 # More signs
-++1,1
---1,1
----1,-1
-+-1,-1
--+1,1
 1++1,2
 1+++1,2
 1--1,2
@@ -50,7 +63,7 @@
 1.0/1,1.0000000000
 1/1.0,1.0000000000
 1.0/1.0,1.0000000000
-
-# Booleans
-true,true
-false,false
+-1/1,-1
+1/-1,-1
+1/-1.0,-1.0000000000
+1.0/-1,-1.0000000000

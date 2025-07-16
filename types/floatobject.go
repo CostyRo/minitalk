@@ -12,54 +12,66 @@ type FloatObject struct {
 func NewFloatObject(value float64) *FloatObject {
 	obj := core.NewObject(value, "Float")
 
-	obj.Set("add", func(other interface{}) interface{} {
-		switch b := other.(type) {
-		case float64:
-			return NewFloatObject(value + b).Object
-		case int64:
-			return NewFloatObject(value + float64(b)).Object
-		default:
-			panic("Unsupported operand for FloatObject.add")
-		}
-	})
-
-	obj.Set("sub", func(other interface{}) interface{} {
-		switch b := other.(type) {
-		case float64:
-			return NewFloatObject(value - b).Object
-		case int64:
-			return NewFloatObject(value - float64(b)).Object
-		default:
-			panic("Unsupported operand for FloatObject.sub")
-		}
-	})
-
-	obj.Set("mul", func(other interface{}) interface{} {
-		switch b := other.(type) {
-		case float64:
-			return NewFloatObject(value * b).Object
-		case int64:
-			return NewFloatObject(value * float64(b)).Object
-		default:
-			panic("Unsupported operand for FloatObject.mul")
-		}
-	})
-
-	obj.Set("div", func(other interface{}) interface{} {
-		switch b := other.(type) {
-		case float64:
-			if b == 0.0 {
-				return errors.NewZeroDivisionError().Object
+	obj.Set("add", func(other core.Object) interface{} {
+		switch other.Class {
+		case "Float":
+			if val, ok := other.Self.(float64); ok {
+				return NewFloatObject(value + val).Object
 			}
-			return NewFloatObject(value / b).Object
-		case int64:
-			if b == 0 {
-				return errors.NewZeroDivisionError().Object
+		case "Integer":
+			if val, ok := other.Self.(int64); ok {
+				return NewFloatObject(value + float64(val)).Object
 			}
-			return NewFloatObject(value / float64(b)).Object
-		default:
-			panic("Unsupported operand for FloatObject.div")
 		}
+		return nil
+	})
+
+	obj.Set("sub", func(other core.Object) interface{} {
+		switch other.Class {
+		case "Float":
+			if val, ok := other.Self.(float64); ok {
+				return NewFloatObject(value - val).Object
+			}
+		case "Integer":
+			if val, ok := other.Self.(int64); ok {
+				return NewFloatObject(value - float64(val)).Object
+			}
+		}
+		return nil
+	})
+
+	obj.Set("mul", func(other core.Object) interface{} {
+		switch other.Class {
+		case "Float":
+			if val, ok := other.Self.(float64); ok {
+				return NewFloatObject(value * val).Object
+			}
+		case "Integer":
+			if val, ok := other.Self.(int64); ok {
+				return NewFloatObject(value * float64(val)).Object
+			}
+		}
+		return nil
+	})
+
+	obj.Set("div", func(other core.Object) interface{} {
+		switch other.Class {
+		case "Float":
+			if val, ok := other.Self.(float64); ok {
+				if val == 0.0 {
+					return errors.NewZeroDivisionError().Object
+				}
+				return NewFloatObject(value / val).Object
+			}
+		case "Integer":
+			if val, ok := other.Self.(int64); ok {
+				if val == 0 {
+					return errors.NewZeroDivisionError().Object
+				}
+				return NewFloatObject(value / float64(val)).Object
+			}
+		}
+		return nil
 	})
 
 	return &FloatObject{*obj}

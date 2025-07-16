@@ -2,33 +2,21 @@ package core
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
-	"unsafe"
 )
 
 type Object struct {
-	selfValue  interface{}
+	Self  interface{}
 	properties map[string]interface{}
-	class      string
+	Class      string
 }
 
-func NewObject(selfValue interface{}, class string) *Object {
+func NewObject(Self interface{}, Class string) *Object {
 	return &Object{
-		selfValue:  selfValue,
+		Self:  Self,
 		properties: make(map[string]interface{}),
-		class:      class,
+		Class:      Class,
 	}
-}
-
-func (o *Object) SetSelfValue(value interface{}, class string) {
-	o.selfValue = value
-	o.class = class
-}
-
-func GetSelfValue[T any](o *Object) (T, bool) {
-	val, ok := o.selfValue.(T)
-	return val, ok
 }
 
 func (o *Object) Set(key string, value interface{}) {
@@ -53,28 +41,27 @@ func (o *Object) PropertyNames() []string {
 }
 
 func (o *Object) String() string {
-	switch o.class {
+	switch o.Class {
 	case "Integer":
-		if v, ok := o.selfValue.(int64); ok {
+		if v, ok := o.Self.(int64); ok {
 			return fmt.Sprintf("%d", v)
 		}
 	case "Float":
-		if v, ok := o.selfValue.(float64); ok {
+		if v, ok := o.Self.(float64); ok {
 			return fmt.Sprintf("%.10f", v)
 		}
 	case "Bool":
-		if v, ok := o.selfValue.(bool); ok {
+		if v, ok := o.Self.(bool); ok {
 			return fmt.Sprintf("%t", v)
 		}
 	default:
-		if strings.HasSuffix(o.class, "Error") {
-			if msg, ok := o.selfValue.(string); ok {
-				return fmt.Sprintf("%s: %s", o.class, msg)
+		if strings.HasSuffix(o.Class, "Error") {
+			if msg, ok := o.Self.(string); ok {
+				return fmt.Sprintf("%s: %s", o.Class, msg)
 			}
 		}
-		if o.selfValue != nil {
-			ptr := reflect.ValueOf(o.selfValue).Pointer()
-			return fmt.Sprintf("<%s at %p>", o.class, unsafe.Pointer(ptr))
+		if o.Self != nil {
+			return fmt.Sprintf("<%s at %p>", o.Class, o)
 		}
 		return "nil"
 	}

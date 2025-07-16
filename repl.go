@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 
 	"minitalk/types"
 	"minitalk/types/core"
+	"minitalk/types/errors"
 )
 
 type Repl struct {
@@ -25,7 +27,9 @@ func NewRepl() *Repl {
 
 func (r *Repl) processLine(input string) *string {
 	var stack []core.Object
+	var lastType string
 	var lastMessage any
+	typeError := false
 	sign := false
 
 	tokens := Lex(input)
@@ -35,18 +39,24 @@ func (r *Repl) processLine(input string) *string {
 			continue
 
 		case Integer:
+			if typeError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Integer", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
 			value, _ := strconv.ParseInt(tok.Value, 10, 64)
 			if sign {
 				value = -value
 				sign = false
 			}
 			intObj := types.NewIntegerObject(value)
-			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
-				result := fn(value)
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(intObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					fmt.Println("function did not return Object")
-					return nil
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Integer", lastType))
+					stack = append(stack, err.Object)
+					continue
 				}
 				stack = append(stack, objResult)
 				lastMessage = nil
@@ -55,18 +65,24 @@ func (r *Repl) processLine(input string) *string {
 			}
 
 		case Float:
+			if typeError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Float", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
 			value, _ := strconv.ParseFloat(tok.Value, 64)
 			if sign {
 				value = -value
 				sign = false
 			}
 			floatObj := types.NewFloatObject(value)
-			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
-				result := fn(value)
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(floatObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					fmt.Println("function did not return Object")
-					return nil
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Float", lastType))
+					stack = append(stack, err.Object)
+					continue
 				}
 				stack = append(stack, objResult)
 				lastMessage = nil
@@ -75,32 +91,34 @@ func (r *Repl) processLine(input string) *string {
 			}
 
 		case RadixNumber:
+			if typeError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Integer", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
 			parts := strings.Split(tok.Value, "r")
-			if len(parts) != 2 {
-				fmt.Println("invalid radix number format:", tok.Value)
-				continue
-			}
-			base, err1 := strconv.ParseInt(parts[0], 10, 32)
-			num, err2 := strconv.ParseInt(parts[1], int(base), 64)
-			if err1 != nil || err2 != nil {
-				fmt.Println("invalid radix number:", tok.Value)
-				continue
-			}
+			base, _ := strconv.ParseInt(parts[0], 10, 32)
+			num, err := strconv.ParseInt(parts[1], int(base), 64)
 			if base < 2 || base > 36 {
-				fmt.Printf("base %d out of range\n", base)
-				continue
+				fmt.Fprintln(os.Stderr, "Syntax error: invalid base", base)
+				return nil
+			}
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Syntax error: invalid number in base", base)
+				return nil
 			}
 			if sign {
 				num = -num
 				sign = false
 			}
 			intObj := types.NewIntegerObject(num)
-			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
-				result := fn(num)
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(intObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					fmt.Println("function did not return Object")
-					return nil
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Integer", lastType))
+					stack = append(stack, err.Object)
+					continue
 				}
 				stack = append(stack, objResult)
 				lastMessage = nil
@@ -110,12 +128,13 @@ func (r *Repl) processLine(input string) *string {
 
 		case True:
 			boolObj := types.NewBoolObject(true)
-			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
-				result := fn(true)
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(boolObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					fmt.Println("function did not return Object")
-					return nil
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Bool", lastType))
+					stack = append(stack, err.Object)
+					continue
 				}
 				stack = append(stack, objResult)
 				lastMessage = nil
@@ -125,12 +144,13 @@ func (r *Repl) processLine(input string) *string {
 
 		case False:
 			boolObj := types.NewBoolObject(false)
-			if fn, ok := lastMessage.(func(interface{}) interface{}); ok {
-				result := fn(false)
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(boolObj.Object)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					fmt.Println("function did not return Object")
-					return nil
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exist for %s and Bool", lastType))
+					stack = append(stack, err.Object)
+					continue
 				}
 				stack = append(stack, objResult)
 				lastMessage = nil
@@ -145,15 +165,16 @@ func (r *Repl) processLine(input string) *string {
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
+			lastType = last.Class
 			val, ok := last.Get("add")
 			if !ok {
-				fmt.Println("no 'add' function found")
+				typeError = true
 				continue
 			}
-			fn, ok := val.(func(interface{}) interface{})
+			fn, ok := val.(func(core.Object) interface{})
 			if !ok {
-				fmt.Println("'add' is not a valid function")
-				continue
+				Log("COMPILER ERROR")
+				return nil
 			}
 			lastMessage = fn
 
@@ -168,15 +189,16 @@ func (r *Repl) processLine(input string) *string {
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
+			lastType = last.Class
 			val, ok := last.Get("sub")
 			if !ok {
-				fmt.Println("no 'sub' function found")
+				typeError = true
 				continue
 			}
-			fn, ok := val.(func(interface{}) interface{})
+			fn, ok := val.(func(core.Object) interface{})
 			if !ok {
-				fmt.Println("'sub' is not a valid function")
-				continue
+				Log("COMPILER ERROR")
+				return nil
 			}
 			lastMessage = fn
 
@@ -187,15 +209,16 @@ func (r *Repl) processLine(input string) *string {
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
+			lastType = last.Class
 			val, ok := last.Get("mul")
 			if !ok {
-				fmt.Println("no 'mul' function found")
+				typeError = true
 				continue
 			}
-			fn, ok := val.(func(interface{}) interface{})
+			fn, ok := val.(func(core.Object) interface{})
 			if !ok {
-				fmt.Println("'mul' is not a valid function")
-				continue
+				Log("COMPILER ERROR")
+				return nil
 			}
 			lastMessage = fn
 
@@ -206,15 +229,16 @@ func (r *Repl) processLine(input string) *string {
 			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
+			lastType = last.Class
 			val, ok := last.Get("div")
 			if !ok {
-				fmt.Println("no 'div' function found")
+				typeError = true
 				continue
 			}
-			fn, ok := val.(func(interface{}) interface{})
+			fn, ok := val.(func(core.Object) interface{})
 			if !ok {
-				fmt.Println("'div' is not a valid function")
-				continue
+				Log("COMPILER ERROR")
+				return nil
 			}
 			lastMessage = fn
 		}

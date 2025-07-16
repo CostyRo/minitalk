@@ -1,6 +1,9 @@
 import subprocess
+import sys
 
 def main():
+    debug = "--debug" in sys.argv
+
     with open("repl_tests/tests.txt", "r") as f:
         lines = [line.strip() for line in f if line.strip() and not line.strip().startswith("#")]
 
@@ -17,16 +20,18 @@ def main():
     repl_input = "\n".join(inputs) + "\nexit\n"
 
     proc = subprocess.Popen(
-        ["go", "run", ".",],
+        ["go", "run", "."],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True
     )
 
-    stdout, _ = proc.communicate(input=repl_input)
+    stdout, stderr = proc.communicate(input=repl_input)
 
-    output_lines = [line.strip() for line in stdout.strip().splitlines() if line.strip()]
+    output_lines = [
+        line.strip() for line in stderr.strip().splitlines()+stdout.strip().splitlines() if line.strip()
+    ]
 
     min_len = min(len(output_lines), len(expected_outputs))
     all_pass = True
@@ -46,6 +51,14 @@ def main():
     else:
         if len(output_lines) != len(expected_outputs):
             print(f"Warning: output lines count ({len(output_lines)}) != expected count ({len(expected_outputs)})")
+
+    if debug:
+        print("\nDebug output (expected vs actual):")
+        for i in range(len(inputs)):
+            inp = inputs[i]
+            exp = expected_outputs[i] if i < len(expected_outputs) else ""
+            got = output_lines[i] if i < len(output_lines) else ""
+            print(f"{inp} | {exp} | {got}")
 
 if __name__ == "__main__":
     main()

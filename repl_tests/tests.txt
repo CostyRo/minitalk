@@ -12,6 +12,7 @@ false,false
 #a_b,#a_b
 #'a_b',#a_b
 #'a b',#'a b'
+$a,$a
 
 @ Division Errors
 1/0,ZeroDivisionError: division by zero
@@ -92,6 +93,12 @@ false+1,TypeError: Message doesn't exists for Bool and Integer
 3>=2,true
 1<=1.5,true
 1.5>=1,true
+$b<$c,true
+$c>$b,true
+$a<=$a,true
+$c>=$b,true
+$d<$d,false
+$g>=$z,false
 
 @ Equals
 1==1,true
@@ -113,6 +120,8 @@ true==true,true
 false==false,true
 true==false,false
 false==true,false
+$b==$b,true
+$b==$c,false
 
 @ Boolean AND
 true&true,true

@@ -116,6 +116,34 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				stack = append(stack, symObj.Object)
 			}
 
+		case Character:
+			if typeError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Character", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			if messageError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			val := tok.Value[1:]
+			r := []rune(val)[0]
+			charObj := types.NewCharacterObject(r)
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(charObj.Object)
+				objResult, ok := result.(core.Object)
+				if !ok {
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Character", lastType))
+					stack = append(stack, err.Object)
+					continue
+				}
+				stack = append(stack, objResult)
+				lastMessage = nil
+			} else {
+				stack = append(stack, charObj.Object)
+			}
+
 		case Integer:
 			if typeError {
 				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))

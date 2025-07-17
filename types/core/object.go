@@ -64,6 +64,10 @@ func (o *Object) String() string {
 			}
 			return strings.ReplaceAll(trimmed, "'", "")
 		}
+	case "Character":
+		if v, ok := o.Self.(rune); ok {
+			return fmt.Sprintf("$%s", string(v))
+		}
 	default:
 		if strings.HasSuffix(o.Class, "Error") {
 			if msg, ok := o.Self.(string); ok {

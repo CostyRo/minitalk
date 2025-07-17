@@ -54,6 +54,32 @@ func (r *Repl) processLine(input string) []string {
 			messageError = false
 			sign = false
 
+		case Symbol:
+			if typeError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Symbol", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			if messageError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			symObj := types.NewSymbolObject(tok.Value)
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(symObj.Object)
+				objResult, ok := result.(core.Object)
+				if !ok {
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Symbol", lastType))
+					stack = append(stack, err.Object)
+					continue
+				}
+				stack = append(stack, objResult)
+				lastMessage = nil
+			} else {
+				stack = append(stack, symObj.Object)
+			}
+
 		case Integer:
 			if typeError {
 				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))

@@ -20,5 +20,16 @@ func NewBoolObject(value bool) *BoolObject {
 		return NewBoolObject(value && otherVal).Object
 	})
 
+	obj.Set("eq", func(other core.Object) interface{} {
+		if other.Class != "Bool" {
+			return NewBoolObject(false).Object
+		}
+		otherVal, ok := other.Self.(bool)
+		if !ok {
+			return NewBoolObject(false).Object
+		}
+		return NewBoolObject(value == otherVal).Object
+	})
+
 	return &BoolObject{*obj}
 }

@@ -64,7 +64,7 @@ var tokenExprs = []tokenExpr{
 	{Character, regexp.MustCompile(`^\$.`)},
 
 	// Symbol (e.g. #'symbol' or #identifier)
-	{Symbol, regexp.MustCompile(`^#'([^']|'')*'|^#[a-zA-Z_][a-zA-Z0-9_]*`)},
+	{Symbol, regexp.MustCompile(`#'([^']|'{2})*'|#[a-zA-Z0-9_]+`)},
 
 	// Float (e.g. 123.45, 4.5e+6)
 	{Float, regexp.MustCompile(`^(?:[0-9]+\.[0-9]+(?:[eE][+-]?[0-9]+)?|[0-9]+(?:[eE][+-]?[0-9]+))`)},

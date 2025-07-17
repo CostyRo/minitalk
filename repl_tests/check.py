@@ -1,26 +1,17 @@
 import subprocess
-import sys
 
-def main():
-    debug = "--debug" in sys.argv
-
-    with open("repl_tests/tests.txt", "r") as f:
-        lines = [line.strip() for line in f if line.strip() and not line.strip().startswith("#")]
-
-    inputs = []
-    expected_outputs = []
+def read_tests(filename):
+    with open(filename) as f:
+        lines = [l.strip() for l in f if l.strip() and not l.startswith("@")]
+    inputs, outputs = [], []
     for line in lines:
-        if ',' not in line:
-            print(f"Ignored invalid line (no comma): {line}")
-            continue
-        inp, outp = line.split(",", 1)
-        inp = inp.strip().encode().decode("unicode_escape")
-        outp = outp.strip().encode().decode("unicode_escape")
-        inputs.append(inp.strip())
-        expected_outputs.append([o.strip() for o in outp.split("\n")])
+        if ',' not in line: continue
+        inp, out = line.split(",", 1)
+        inputs.append(inp.encode().decode("unicode_escape"))
+        outputs.append([o.strip() for o in out.encode().decode("unicode_escape").split("\n")])
+    return inputs, outputs
 
-    repl_input = "\n".join(inputs) + "\nexit\n"
-
+def run_repl(inputs):
     proc = subprocess.Popen(
         ["go", "run", "."],
         stdin=subprocess.PIPE,
@@ -28,44 +19,46 @@ def main():
         stderr=subprocess.PIPE,
         text=True
     )
+    stdout, stderr = proc.communicate(input="\n".join(inputs) + "\nexit\n")
+    out_lines = [l.strip() for l in stdout.splitlines() if l.strip()]
+    err_lines = [l.strip() for l in stderr.splitlines() if l.strip()]
+    return out_lines, err_lines
 
-    stdout, stderr = proc.communicate(input=repl_input)
+def check_results(inputs, expected_outputs, actual_outputs, stream_name):
+    passed, failed = 0, 0
+    idx = 0
+    for i, expected in enumerate(expected_outputs):
+        got = actual_outputs[idx:idx + len(expected)]
+        if got != expected:
+            print(f"[{stream_name} FAIL]")
+            print(f"  Input:    {inputs[i]}")
+            print(f"  Expected: {expected}")
+            print(f"  Got:      {got}\n")
+            failed += 1
+        else:
+            passed += 1
+        idx += len(expected)
+    return passed, failed
 
-    output_lines = [
-        line.strip() for line in stderr.strip().splitlines()+stdout.strip().splitlines() if line.strip()
-    ]
+def main():
+    err_inputs, err_expected = read_tests("repl_tests/syntax_errors.txt")
+    good_inputs, good_expected = read_tests("repl_tests/tests.txt")
 
-    min_len = min(len(output_lines), len(expected_outputs))
-    all_pass = True
-    output_index = 0
-    all_pass = True
+    _, err_output = run_repl(err_inputs)
+    err_passed, err_failed = check_results(err_inputs, err_expected, err_output, "stderr")
 
-    for i in range(len(inputs)):
-        inp = inputs[i]
-        exp_lines = expected_outputs[i]
-        got_lines = output_lines[output_index : output_index + len(exp_lines)]
+    good_output, _ = run_repl(good_inputs)
+    good_passed, good_failed = check_results(good_inputs, good_expected, good_output, "stdout")
 
-        if got_lines != exp_lines:
-            all_pass = False
-            print(f"Test input:    {inp}")
-            print(f"Expected out:  {exp_lines}")
-            print(f"Got output:    {got_lines}")
-            print("")
-        output_index += len(exp_lines)
+    print("\n--- Test Summary ---")
+    print(f"Syntax Errors: {err_passed} passed, {err_failed} failed")
+    print(f"Valid Tests:   {good_passed} passed, {good_failed} failed")
+    print(f"All Tests:     {err_passed + good_passed} passed, {err_failed + good_failed} failed")
 
-    if all_pass:
-        print(f"All {min_len} tests passed!")
+    if err_failed == 0 and good_failed == 0:
+        print("\n✅ All tests passed!")
     else:
-        if len(output_lines) != len(expected_outputs):
-            print(f"Warning: output lines count ({len(output_lines)}) != expected count ({len(expected_outputs)})")
-
-    if debug:
-        print("\nDebug output (expected vs actual):")
-        for i in range(len(inputs)):
-            inp = inputs[i]
-            exp = expected_outputs[i] if i < len(expected_outputs) else ""
-            got = output_lines[i] if i < len(output_lines) else ""
-            print(f"{inp} | {exp} | {got}")
+        print("\n❌ Some tests failed.")
 
 if __name__ == "__main__":
     main()

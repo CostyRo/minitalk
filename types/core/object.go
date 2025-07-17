@@ -56,6 +56,14 @@ func (o *Object) String() string {
 		if v, ok := o.Self.(bool); ok {
 			return fmt.Sprintf("%t", v)
 		}
+	case "Symbol":
+		if v, ok := o.Self.(string); ok {
+			trimmed := strings.Trim(v, "\"'")
+			if strings.ContainsAny(trimmed, " \t\n") {
+				return fmt.Sprintf("%s'", trimmed)
+			}
+			return strings.ReplaceAll(trimmed, "'", "")
+		}
 	default:
 		if strings.HasSuffix(o.Class, "Error") {
 			if msg, ok := o.Self.(string); ok {

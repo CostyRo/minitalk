@@ -108,7 +108,7 @@ func TestExtraCode(t *testing.T) {
 	input := `
         < > <= >= == :=
         42 123.45 1.2e3 16rA000 2r1010
-        'he''llo' #'symbol' $x
+        'he''llo' #1 #'symbol' $x
         #($a #a 'b' 2 2.0) #[1 2 3]
         "This is a comment"
     `
@@ -126,6 +126,7 @@ func TestExtraCode(t *testing.T) {
 		{RadixNumber, "16rA000", 0, 0},
 		{RadixNumber, "2r1010", 0, 0},
 		{String, "'he''llo'", 0, 0},
+		{Symbol, "#1", 0, 0},
 		{Symbol, "#'symbol'", 0, 0},
 		{Character, "$x", 0, 0},
 		{Array, "#($a #a 'b' 2 2.0)", 0, 0},

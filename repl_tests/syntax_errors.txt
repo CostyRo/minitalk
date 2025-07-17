@@ -1,0 +1,13 @@
+*1,SyntaxError: invalid syntax
+/1,SyntaxError: invalid syntax
+&1,SyntaxError: invalid syntax
+>1,SyntaxError: invalid syntax
+<1,SyntaxError: invalid syntax
+>=1,SyntaxError: invalid syntax
+<=1,SyntaxError: invalid syntax
+==1,SyntaxError: invalid syntax
+2r2,Syntax error: invalid number in base 2
+2r2+1,Syntax error: invalid number in base 2
+0r1,Syntax error: invalid base 0
+0r1+1,Syntax error: invalid base 0
+37r1,Syntax error: invalid base 37

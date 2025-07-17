@@ -25,25 +25,61 @@ func NewRepl() *Repl {
 	}
 }
 
-func (r *Repl) processLine(input string) []string {
-	var results []string
+func (r *Repl) processLine(tokens []Token) []core.Object {
+	var results []core.Object
 
+	var subTokens []Token
 	var stack []core.Object
 	var lastType string
 	var lastMessage any
+	paren := false
 	typeError := false
 	messageError := false
 	sign := false
 
-	tokens := Lex(input)
 	for _, tok := range tokens {
+		if paren {
+			subTokens = append(subTokens, tok)
+			if tok.Type == RParen {
+				paren = false
+				subTokens = subTokens[:len(subTokens)-1]
+			} else {
+				continue
+			}
+		}
+		
 		switch tok.Type {
 		case Whitespace:
 			continue
 
+		case LParen:
+			paren = true
+
+		case RParen:
+			subResult := r.processLine(subTokens)
+			if len(subResult) == 0 {
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
+			}
+
+			obj := subResult[len(subResult)-1]
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(obj)
+				objResult, ok := result.(core.Object)
+				if !ok {
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, obj.Class))
+					stack = append(stack, err.Object)
+					continue
+				}
+				stack = append(stack, objResult)
+				lastMessage = nil
+			} else {
+				stack = append(stack, obj)
+			}
+
 		case Period:
 			if len(stack) > 0 {
-        		result := stack[len(stack)-1].String()
+        		result := stack[len(stack)-1]
         		results = append(results, result)
     		}
 
@@ -482,7 +518,7 @@ func (r *Repl) processLine(input string) []string {
 	}
 
 	if len(stack) > 0 {
-    	result := stack[len(stack)-1].String()
+    	result := stack[len(stack)-1]
     	results = append(results, result)
 	}
 	return results
@@ -508,9 +544,10 @@ func (r *Repl) Start() {
 
 		r.liner.AppendHistory(input)
 
-		outputs := r.processLine(input)
+		tokens := Lex(input)
+		outputs := r.processLine(tokens)
 		for _, out := range outputs {
-    		fmt.Println(out)
+    		fmt.Println(out.String())
 		}
 	}
 }

@@ -119,3 +119,7 @@ true&true,true
 true&false,false
 false&true,false
 false&false,false
+
+@ Paren
+(1),1
+1+(2*3),7

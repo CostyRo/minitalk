@@ -368,10 +368,23 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				last := stack[len(stack)-1]
 				stack = stack[:len(stack)-1]
 				lastType = last.Class
-				_, ok := last.Get(tok.Value)
+				val, ok := last.Get(tok.Value)
 				if !ok {
 					messageError = true
 					continue
+				} else {
+					if _, ok := val.(func(core.Object) interface{}); ok {
+					} else if obj, ok := val.(core.Object); ok {
+						stack = append(stack, obj)
+					}else {
+						if constructor := last.GetPropertyType(tok.Value); constructor != nil {
+							if obj := constructor(val); obj != nil {
+								stack = append(stack, *obj)
+							}
+						} else {
+							stack = append(stack, *types.ObjectConstructor(val))
+						}
+					}
 				}
 			}
 

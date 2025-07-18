@@ -143,3 +143,30 @@ false&false,false
 (1),1
 1+(2*3),7
 1+(1+(1+1)),4
+
+@ isNil
+1 isNil,false
+1.5 isNil,false
+#a isNil,false
+true isNil,false
+$a isNil,false
+'a' isNil,false
+nil isNil,true
+
+@ Int conversions
+1 toFloat,1.0000000000
+0 toBool,false
+1 toBool,true
+97 toCharacter,$a
+-1 toCharacter,ValueError: Value is not in valid Unicode range 0..0x10FFFF
+123 toString,'123'
+123 toSymbol,#123
+
+@ Float conversions
+1.5 toFloat,1.5000000000
+0.0 toBool,false
+3.14 toBool,true
+97.0 toCharacter,$a
+-1.0 toCharacter,ValueError: Value is not in valid Unicode range 0..0x10FFFF
+3.14 toString,'3.1400000000'
+3.14 toSymbol,TypeError: Invalid conversion to Symbol

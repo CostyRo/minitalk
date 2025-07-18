@@ -8,26 +8,38 @@ import (
 type Object struct {
 	Self  interface{}
 	properties map[string]interface{}
+	propertyTypes  map[string]func(interface{}) *Object
 	Class      string
 }
 
 func NewObject(Self interface{}, Class string) *Object {
 	obj := &Object{
-		Self:       Self,
-		properties: make(map[string]interface{}),
-		Class:      Class,
+		Self:          Self,
+		properties:    make(map[string]interface{}),
+		propertyTypes: make(map[string]func(interface{}) *Object),
+		Class:         Class,
 	}
 	obj.Set("isNil", Self == nil)
 	return obj
 }
 
-func (o *Object) Set(key string, value interface{}) {
+func (o *Object) Set(key string, value interface{}, constructor ...func(interface{}) *Object) {
 	o.properties[key] = value
+	if len(constructor) > 0 && constructor[0] != nil {
+		o.propertyTypes[key] = constructor[0]
+	}
 }
 
 func (o *Object) Get(key string) (interface{}, bool) {
 	v, ok := o.properties[key]
 	return v, ok
+}
+
+func (o *Object) GetPropertyType(key string) func(interface{}) *Object {
+	if constructor, ok := o.propertyTypes[key]; ok {
+		return constructor
+	}
+	return nil
 }
 
 func (o *Object) PropertiesLen() int {

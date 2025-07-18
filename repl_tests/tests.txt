@@ -184,3 +184,11 @@ false toBool,false
 false toSymbol,#false
 false toCharacter,TypeError: Invalid conversion to Character
 false toString,'false'
+
+@ Character conversions
+$a toInteger,97
+$a toFloat,97.0000000000
+$a toBool,true
+$a toSymbol,#a
+$a toCharacter,$a
+$a toString,'a'

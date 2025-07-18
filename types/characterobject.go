@@ -1,6 +1,10 @@
 package types
 
-import "minitalk/types/core"
+import (
+	"fmt"
+
+	"minitalk/types/core"
+)
 
 type CharacterObject struct {
 	core.Object
@@ -39,6 +43,14 @@ func NewCharacterObject(value rune) *CharacterObject {
 		}
 		return NewBoolObject(value == other.Self.(rune)).Object
 	})
+	if val, ok := obj.Self.(rune); ok {
+		obj.Set("toInteger", int64(val), ObjectConstructor)
+		obj.Set("toFloat", float64(val), ObjectConstructor)
+		obj.Set("toBool", value != 0, ObjectConstructor)
+		obj.Set("toSymbol", fmt.Sprintf("#%c", value), SymbolConstructor)
+		obj.Set("toCharacter", val, ObjectConstructor)
+		obj.Set("toString", fmt.Sprintf("%c", value), ObjectConstructor)
+	}
 
 	return &CharacterObject{*obj}
 }

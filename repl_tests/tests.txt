@@ -170,3 +170,17 @@ nil isNil,true
 -1.0 toCharacter,ValueError: Value is not in valid Unicode range 0..0x10FFFF
 3.14 toString,'3.1400000000'
 3.14 toSymbol,TypeError: Invalid conversion to Symbol
+
+@ Bool conversions
+true toInteger,1
+true toFloat,1.0000000000
+true toBool,true
+true toSymbol,#true
+true toCharacter,TypeError: Invalid conversion to Character
+true toString,'true'
+false toInteger,0
+false toFloat,0.0000000000
+false toBool,false
+false toSymbol,#false
+false toCharacter,TypeError: Invalid conversion to Character
+false toString,'false'

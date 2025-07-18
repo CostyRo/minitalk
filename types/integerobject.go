@@ -142,13 +142,11 @@ func NewIntegerObject(value int64) *IntegerObject {
 		obj.Set("toFloat", float64(val), ObjectConstructor)
 		obj.Set("toBool", val != 0, ObjectConstructor)
 		obj.Set("toSymbol", fmt.Sprintf("#%d", val), SymbolConstructor)
-
 		if val < 0 || val > 0x10FFFF {
 			obj.Set("toCharacter", errors.NewValueError("Value is not in valid Unicode range 0..0x10FFFF").Object, nil)
 		} else {
 			obj.Set("toCharacter", rune(val), ObjectConstructor)
 		}
-
 		obj.Set("toString", fmt.Sprintf("%d", val), ObjectConstructor)
 	}
 

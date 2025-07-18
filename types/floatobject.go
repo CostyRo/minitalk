@@ -142,13 +142,11 @@ func NewFloatObject(value float64) *FloatObject {
 		obj.Set("toFloat", val, ObjectConstructor)
 		obj.Set("toBool", val != 0, ObjectConstructor)
 		obj.Set("toSymbol", errors.NewTypeError("Invalid conversion to Symbol").Object)
-
 		if val < 0 || val > 0x10FFFF {
 			obj.Set("toCharacter", errors.NewValueError("Value is not in valid Unicode range 0..0x10FFFF").Object, nil)
 		} else {
 			obj.Set("toCharacter", rune(val), ObjectConstructor)
 		}
-
 		obj.Set("toString", fmt.Sprintf("%.10f", val), ObjectConstructor)
 	}
 

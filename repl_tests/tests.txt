@@ -13,6 +13,7 @@ false,false
 #'a_b',#a_b
 #'a b',#'a b'
 $a,$a
+'a','a'
 
 @ Division Errors
 1/0,ZeroDivisionError: division by zero
@@ -37,6 +38,7 @@ false+1,TypeError: Message doesn't exists for Bool and Integer
 1+1.0,2.0000000000
 1.0+1.0,2.0000000000
 +1+1,2
+'a'+'b','ab'
 
 @ Substraction
 1-1,0
@@ -99,6 +101,12 @@ $a<=$a,true
 $c>=$b,true
 $d<$d,false
 $g>=$z,false
+'ana'<'bob',true
+'bob'>'ana',true
+'ana'<='ana',true
+'ana'>='ana',true
+'ana'>'bob',false
+'bob'<'ana',false
 
 @ Equals
 1==1,true
@@ -122,6 +130,8 @@ true==false,false
 false==true,false
 $b==$b,true
 $b==$c,false
+'ana'=='ana',true
+'ana'=='bob',false
 
 @ Boolean AND
 true&true,true
@@ -132,3 +142,4 @@ false&false,false
 @ Paren
 (1),1
 1+(2*3),7
+1+(1+(1+1)),4

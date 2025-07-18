@@ -25,7 +25,6 @@ func NewFloatObject(value float64) *FloatObject {
 		}
 		return nil
 	})
-
 	obj.Set("sub", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":
@@ -39,7 +38,6 @@ func NewFloatObject(value float64) *FloatObject {
 		}
 		return nil
 	})
-
 	obj.Set("mul", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":
@@ -53,7 +51,6 @@ func NewFloatObject(value float64) *FloatObject {
 		}
 		return nil
 	})
-
 	obj.Set("div", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":
@@ -73,7 +70,6 @@ func NewFloatObject(value float64) *FloatObject {
 		}
 		return nil
 	})
-
 	obj.Set("lt", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":
@@ -87,7 +83,6 @@ func NewFloatObject(value float64) *FloatObject {
 		}
 		return nil
 	})
-
 	obj.Set("gt", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":
@@ -101,7 +96,6 @@ func NewFloatObject(value float64) *FloatObject {
 		}
 		return nil
 	})
-
 	obj.Set("le", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":
@@ -115,7 +109,6 @@ func NewFloatObject(value float64) *FloatObject {
 		}
 		return nil
 	})
-
 	obj.Set("ge", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":
@@ -129,7 +122,6 @@ func NewFloatObject(value float64) *FloatObject {
 		}
 		return nil
 	})
-
 	obj.Set("eq", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":

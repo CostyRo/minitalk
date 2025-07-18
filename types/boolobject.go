@@ -19,7 +19,6 @@ func NewBoolObject(value bool) *BoolObject {
 		}
 		return NewBoolObject(value && otherVal).Object
 	})
-
 	obj.Set("eq", func(other core.Object) interface{} {
 		if other.Class != "Bool" {
 			return NewBoolObject(false).Object

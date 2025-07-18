@@ -68,6 +68,10 @@ func (o *Object) String() string {
 		if v, ok := o.Self.(rune); ok {
 			return fmt.Sprintf("$%s", string(v))
 		}
+	case "String":
+		if v, ok := o.Self.(string); ok {
+			return fmt.Sprintf("'%s'", v)
+		}
 	default:
 		if strings.HasSuffix(o.Class, "Error") {
 			if msg, ok := o.Self.(string); ok {

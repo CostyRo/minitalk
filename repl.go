@@ -32,51 +32,60 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 	var stack []core.Object
 	var lastType string
 	var lastMessage any
-	paren := false
 	typeError := false
 	messageError := false
 	sign := false
-
+	paren := false
+	if len(tokens) == 1 && tokens[0].Type == RParen {
+		return nil
+	}
 	for _, tok := range tokens {
 		if paren {
 			subTokens = append(subTokens, tok)
-			if tok.Type == RParen {
-				paren = false
-				subTokens = subTokens[:len(subTokens)-1]
-			} else {
+			switch tok.Type {
+			case RParen:
+				if !paren {
+					subTokens = subTokens[:len(subTokens)-1]
+				}
+			case LParen:
+				paren = true
+				continue
+			default:
 				continue
 			}
 		}
 		
 		switch tok.Type {
 		case Whitespace:
-			continue
 
 		case LParen:
-			paren = true
+			paren =  true
 
 		case RParen:
-			subResult := r.processLine(subTokens)
-			if len(subResult) == 0 {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
-				return nil
-			}
-
-			obj := subResult[len(subResult)-1]
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(obj)
-				objResult, ok := result.(core.Object)
-				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, obj.Class))
-					stack = append(stack, err.Object)
-					continue
+			if paren {
+				subResult := r.processLine(subTokens)
+				paren = false
+				if len(subResult) == 0 {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+					return nil
 				}
-				stack = append(stack, objResult)
-				lastMessage = nil
-			} else {
-				stack = append(stack, obj)
-			}
 
+				obj := subResult[len(subResult)-1]
+				if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+					result := fn(obj)
+					objResult, ok := result.(core.Object)
+					if !ok {
+						err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, obj.Class))
+						stack = append(stack, err.Object)
+						continue
+					}
+					stack = append(stack, objResult)
+					lastMessage = nil
+				} else {
+					stack = append(stack, obj)
+				}
+			}
+			
 		case Period:
 			if len(stack) > 0 {
         		result := stack[len(stack)-1]
@@ -142,6 +151,33 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				lastMessage = nil
 			} else {
 				stack = append(stack, charObj.Object)
+			}
+
+		case String:
+			if typeError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and String", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			if messageError {
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
+				stack = append(stack, err.Object)
+				continue
+			}
+			val := tok.Value[1 : len(tok.Value)-1]
+			strObj := types.NewStringObject(val)
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(strObj.Object)
+				objResult, ok := result.(core.Object)
+				if !ok {
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and String", lastType))
+					stack = append(stack, err.Object)
+					continue
+				}
+				stack = append(stack, objResult)
+				lastMessage = nil
+			} else {
+				stack = append(stack, strObj.Object)
 			}
 
 		case Integer:

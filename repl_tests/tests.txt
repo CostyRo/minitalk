@@ -195,10 +195,29 @@ $a toString,'a'
 
 @ String conversions
 '123' toInteger,123
+'abc' toInteger,ValueError: Cannot convert abc to Integer
 '3.1400000000' toFloat,3.1400000000
+'abc' toFloat,ValueError: Cannot convert abc to Float
 'true' toBool,true
 'false' toBool,false
+'abc' toBool,ValueError: Cannot convert abc to Bool
 'a' toCharacter,$a
-'abc' toCharacter,TypeError: Invalid conversion to Character
+'ab' toCharacter,TypeError: Invalid conversion to Character
 '123' toString,'123'
-'test' toSymbol,#test
+'hello' toSymbol,#hello
+
+@ Symbol conversions
+#a_b toSymbol,#a_b
+#'a_b' toSymbol,#a_b
+#'a b' toSymbol,#'a b'
+#123 toInteger,123
+#a_b toInteger,ValueError: Cannot convert a_b to Integer
+#123 toFloat,123.0000000000
+#a_b toFloat,ValueError: Cannot convert a_b to Float
+#true toBool,true
+#false toBool,false
+#a_b toBool,ValueError: Cannot convert a_b to Bool
+#a toCharacter,$a
+#abc toCharacter,TypeError: Invalid conversion to Character
+#a_b toString,'a_b'
+#'a b' toString,'a b'

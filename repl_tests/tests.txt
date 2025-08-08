@@ -192,3 +192,13 @@ $a toBool,true
 $a toSymbol,#a
 $a toCharacter,$a
 $a toString,'a'
+
+@ String conversions
+'123' toInteger,123
+'3.1400000000' toFloat,3.1400000000
+'true' toBool,true
+'false' toBool,false
+'a' toCharacter,$a
+'abc' toCharacter,TypeError: Invalid conversion to Character
+'123' toString,'123'
+'test' toSymbol,#test

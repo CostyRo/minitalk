@@ -84,6 +84,14 @@ func (o *Object) String() string {
 		if v, ok := o.Self.(string); ok {
 			return fmt.Sprintf("'%s'", v)
 		}
+	case "ByteArray":
+		if arr, ok := o.Self.([]byte); ok {
+			elems := make([]string, len(arr))
+			for i, b := range arr {
+				elems[i] = fmt.Sprintf("%d", b)
+			}
+			return "#[" + strings.Join(elems, " ") + "]"
+		}
 	default:
 		if strings.HasSuffix(o.Class, "Error") {
 			if msg, ok := o.Self.(string); ok {

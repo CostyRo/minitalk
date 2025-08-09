@@ -126,7 +126,7 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				obj = types.NewCharacterObject([]rune(val)[0]).Object
 			case String:
 				typeName = "String"
-				val := tok.Value[1 : len(tok.Value)-1]
+				val := tok.Value[1:len(tok.Value)-1]
 				obj = types.NewStringObject(val).Object
 			case Integer:
 				typeName = "Integer"
@@ -203,6 +203,110 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				} else {
 					stack = append(stack, obj)
 				}
+			}
+
+		case ByteArray:
+			valStr := tok.Value[2:len(tok.Value)-1]
+			innerTokens := Lex(valStr)
+
+			var elements []byte
+			valid := true
+			minus := false
+
+			for _, t := range innerTokens {
+				var intVal int64
+				var err error
+
+				switch t.Type {
+				case Whitespace, Plus:
+					continue
+
+				case Minus:
+					minus = true
+					continue
+
+				case Integer:
+					intVal, err = strconv.ParseInt(t.Value, 10, 64)
+
+				case RadixNumber:
+					parts := strings.Split(t.Value, "r")
+					base, _ := strconv.ParseInt(parts[0], 10, 32)
+					intVal, err = strconv.ParseInt(parts[1], int(base), 64)
+					if base < 2 || base > 36 {
+						fmt.Fprintln(os.Stderr, "SyntaxError: invalid base", base)
+						return nil
+					}
+					if err != nil {
+						fmt.Fprintln(os.Stderr, "SyntaxError: invalid number in base", base)
+						return nil
+					}
+
+				case Float:
+					var floatVal float64
+					floatVal, err = strconv.ParseFloat(t.Value, 64)
+					intVal = int64(floatVal)
+				
+				case Character:
+					runes := []rune(t.Value[1:])
+					if len(runes) != 1 {
+						err = fmt.Errorf("invalid literal: %s", t.Value)
+					} else {
+						intVal = int64(runes[0])
+					}
+
+				case String:
+					strVal := t.Value[1:len(t.Value)-1]
+					intVal, err = strconv.ParseInt(strVal, 10, 64)
+					if err != nil {
+						err = fmt.Errorf("invalid literal: %s", t.Value)
+					}
+
+				case Symbol:
+					symName := t.Value[1:]
+					intVal, err = strconv.ParseInt(symName, 10, 64)
+					if err != nil {
+						err = fmt.Errorf("invalid literal: %s", t.Value)
+					}
+
+				case True:
+					intVal = 1
+				case False:
+					intVal = 0
+				
+				case Identifier:
+					obj, inScope := r.globalScope[t.Value]
+					if inScope {
+						ok := false
+						val, ok := obj.Get("toInteger")
+						if !ok {
+							err = fmt.Errorf("invalid literal: %s", t.Value)
+						}
+						if intVal, ok = val.(int64); !ok {
+							err = fmt.Errorf("invalid literal: %s", t.Value)
+						}
+					} else {
+						valid = false
+						stack = append(stack, errors.NewNameError(fmt.Sprintf("'%s' is not defined", t.Value)).Object)
+					}
+
+				default:
+					err = fmt.Errorf("invalid byte array element: %s", t.Value)
+				}
+
+				if err != nil || intVal < 0 || intVal > 255 || minus {
+					value := t.Value
+					if minus {
+						value = fmt.Sprintf("-%s", t.Value)
+					}
+					stack = append(stack, errors.NewValueError(fmt.Sprintf("Invalid byte value: %s", value)).Object)
+					valid = false
+					break
+				}
+				elements = append(elements, byte(intVal))
+			}
+
+			if valid {
+				stack = append(stack, types.NewByteArrayObject(elements).Object)
 			}
 
 		case Identifier:

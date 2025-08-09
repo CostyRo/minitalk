@@ -1,5 +1,6 @@
 a:=1,
 
+-a,SyntaxError: invalid syntax
 :=,SyntaxError: invalid syntax
 *1,SyntaxError: invalid syntax
 /1,SyntaxError: invalid syntax
@@ -10,6 +11,11 @@ a:=1,
 <=1,SyntaxError: invalid syntax
 ==1,SyntaxError: invalid syntax
 (),SyntaxError: invalid syntax
+-$a,SyntaxError: invalid syntax
+-'hello',SyntaxError: invalid syntax
+-true,SyntaxError: invalid syntax
+-false,SyntaxError: invalid syntax
+-nil,SyntaxError: invalid syntax
 1 plus 1,SyntaxError: invalid syntax
 #[1] plus #[1],SyntaxError: invalid syntax
 1 plus a,SyntaxError: invalid syntax

@@ -32,6 +32,8 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 	var stack []core.Object
 	var lastType string
 	var lastMessage any
+	var lastVar string
+	assigment := false
 	typeError := false
 	messageError := false
 	sign := false
@@ -40,6 +42,10 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 		return nil
 	}
 	for _, tok := range tokens {
+		if tok.Type == Whitespace {
+			continue
+		}
+
 		if paren {
 			subTokens = append(subTokens, tok)
 			switch tok.Type {
@@ -54,10 +60,8 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				continue
 			}
 		}
-		
-		switch tok.Type {
-		case Whitespace:
 
+		switch tok.Type {
 		case LParen:
 			paren =  true
 
@@ -95,197 +99,83 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 			stack = nil
 			lastMessage = nil
 			lastType = ""
+			lastVar = ""
 			typeError = false
 			messageError = false
 			sign = false
+			assigment = false
 
-		case Symbol:
-			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Symbol", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			if messageError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			symObj := types.NewSymbolObject(tok.Value)
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(symObj.Object)
-				objResult, ok := result.(core.Object)
-				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Symbol", lastType))
-					stack = append(stack, err.Object)
-					continue
-				}
-				stack = append(stack, objResult)
-				lastMessage = nil
-			} else {
-				stack = append(stack, symObj.Object)
-			}
-
-		case Character:
-			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Character", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			if messageError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			val := tok.Value[1:]
-			r := []rune(val)[0]
-			charObj := types.NewCharacterObject(r)
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(charObj.Object)
-				objResult, ok := result.(core.Object)
-				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Character", lastType))
-					stack = append(stack, err.Object)
-					continue
-				}
-				stack = append(stack, objResult)
-				lastMessage = nil
-			} else {
-				stack = append(stack, charObj.Object)
-			}
-
-		case String:
-			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and String", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			if messageError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			val := tok.Value[1 : len(tok.Value)-1]
-			strObj := types.NewStringObject(val)
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(strObj.Object)
-				objResult, ok := result.(core.Object)
-				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and String", lastType))
-					stack = append(stack, err.Object)
-					continue
-				}
-				stack = append(stack, objResult)
-				lastMessage = nil
-			} else {
-				stack = append(stack, strObj.Object)
-			}
-
-		case Integer:
-			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			if messageError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			value, _ := strconv.ParseInt(tok.Value, 10, 64)
-			if sign {
-				value = -value
-				sign = false
-			}
-			intObj := types.NewIntegerObject(value)
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(intObj.Object)
-				objResult, ok := result.(core.Object)
-				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))
-					stack = append(stack, err.Object)
-					continue
-				}
-				stack = append(stack, objResult)
-				lastMessage = nil
-			} else {
-				stack = append(stack, intObj.Object)
-			}
-
-		case Float:
-			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Float", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			if messageError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			value, _ := strconv.ParseFloat(tok.Value, 64)
-			if sign {
-				value = -value
-				sign = false
-			}
-			floatObj := types.NewFloatObject(value)
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(floatObj.Object)
-				objResult, ok := result.(core.Object)
-				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Float", lastType))
-					stack = append(stack, err.Object)
-					continue
-				}
-				stack = append(stack, objResult)
-				lastMessage = nil
-			} else {
-				stack = append(stack, floatObj.Object)
-			}
-
-		case RadixNumber:
-			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			if messageError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			parts := strings.Split(tok.Value, "r")
-			base, _ := strconv.ParseInt(parts[0], 10, 32)
-			num, err := strconv.ParseInt(parts[1], int(base), 64)
-			if base < 2 || base > 36 {
-				fmt.Fprintln(os.Stderr, "Syntax error: invalid base", base)
+		case Assignment:
+			if lastVar == "" {
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
 				return nil
 			}
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Syntax error: invalid number in base", base)
-				return nil
-			}
-			if sign {
-				num = -num
-				sign = false
-			}
-			intObj := types.NewIntegerObject(num)
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(intObj.Object)
-				objResult, ok := result.(core.Object)
-				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Integer", lastType))
-					stack = append(stack, err.Object)
-					continue
+			assigment = true
+
+		case Symbol, Character, String, Integer, Float, RadixNumber, True, False, Nil:
+			var typeName string
+			var obj core.Object
+
+			switch tok.Type {
+			case Symbol:
+				typeName = "Symbol"
+				obj = types.NewSymbolObject(tok.Value).Object
+			case Character:
+				typeName = "Character"
+				val := tok.Value[1:]
+				obj = types.NewCharacterObject([]rune(val)[0]).Object
+			case String:
+				typeName = "String"
+				val := tok.Value[1 : len(tok.Value)-1]
+				obj = types.NewStringObject(val).Object
+			case Integer:
+				typeName = "Integer"
+				value, _ := strconv.ParseInt(tok.Value, 10, 64)
+				if sign {
+					value = -value
+					sign = false
 				}
-				stack = append(stack, objResult)
-				lastMessage = nil
-			} else {
-				stack = append(stack, intObj.Object)
+				obj = types.NewIntegerObject(value).Object
+			case Float:
+				typeName = "Float"
+				value, _ := strconv.ParseFloat(tok.Value, 64)
+				if sign {
+					value = -value
+					sign = false
+				}
+				obj = types.NewFloatObject(value).Object
+			case RadixNumber:
+				typeName = "Integer"
+				parts := strings.Split(tok.Value, "r")
+				base, _ := strconv.ParseInt(parts[0], 10, 32)
+				num, err := strconv.ParseInt(parts[1], int(base), 64)
+				if base < 2 || base > 36 {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid base", base)
+					return nil
+				}
+				if err != nil {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid number in base", base)
+					return nil
+				}
+				if sign {
+					num = -num
+					sign = false
+				}
+				obj = types.NewIntegerObject(num).Object
+			case True:
+				typeName = "Bool"
+				obj = types.NewBoolObject(true).Object
+			case False:
+				typeName = "Bool"
+				obj = types.NewBoolObject(false).Object
+			case Nil:
+				typeName = "Nil"
+				nilObj := core.NewObject(nil, "Nil")
+				obj = *nilObj
 			}
 
-		case True:
 			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Bool", lastType))
+				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, typeName))
 				stack = append(stack, err.Object)
 				continue
 			}
@@ -294,76 +184,56 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				stack = append(stack, err.Object)
 				continue
 			}
-			boolObj := types.NewBoolObject(true)
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(boolObj.Object)
-				objResult, ok := result.(core.Object)
-				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Bool", lastType))
-					stack = append(stack, err.Object)
-					continue
-				}
-				stack = append(stack, objResult)
-				lastMessage = nil
-			} else {
-				stack = append(stack, boolObj.Object)
-			}
 
-		case False:
-			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Bool", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			if messageError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			boolObj := types.NewBoolObject(false)
 			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(boolObj.Object)
+				result := fn(obj)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Bool", lastType))
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, typeName))
 					stack = append(stack, err.Object)
 					continue
 				}
 				stack = append(stack, objResult)
 				lastMessage = nil
 			} else {
-				stack = append(stack, boolObj.Object)
-			}
-
-		case Nil:
-			if typeError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Nil", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			if messageError {
-				err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
-				stack = append(stack, err.Object)
-				continue
-			}
-			nilObj := core.NewObject(nil, "Nil")
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-				result := fn(*nilObj)
-				objResult, ok := result.(core.Object)
-				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and Nil", lastType))
-					stack = append(stack, err.Object)
-					continue
+				if assigment {
+					r.globalScope[lastVar] = obj
+					lastVar = ""
+					assigment = false
+				} else {
+					stack = append(stack, obj)
 				}
-				stack = append(stack, objResult)
-				lastMessage = nil
-			} else {
-				stack = append(stack, *nilObj)
 			}
 
 		case Identifier:
+			obj, inScope := r.globalScope[tok.Value]
+
+			if lastMessage != nil{
+				if inScope {
+					if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+						result := fn(obj)
+						objResult, ok := result.(core.Object)
+						if !ok {
+							err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, obj.Class))
+							stack = append(stack, err.Object)
+							continue
+						}
+						stack = append(stack, objResult)
+						lastMessage = nil
+					}
+					continue
+				} else {
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and NameError", lastType))
+					stack = append(stack, err.Object)
+					continue
+				}
+			}
+
 			if len(stack) == 0 {
-				continue
+				if inScope {
+					stack = append(stack, obj)
+				}
+				lastVar = tok.Value
 			} else {
 				last := stack[len(stack)-1]
 				stack = stack[:len(stack)-1]
@@ -372,226 +242,84 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				if !ok {
 					messageError = true
 					continue
+				}
+				if _, ok := val.(func(core.Object) interface{}); ok {
+				} else if obj, ok := val.(core.Object); ok {
+					stack = append(stack, obj)
 				} else {
-					if _, ok := val.(func(core.Object) interface{}); ok {
-					} else if obj, ok := val.(core.Object); ok {
-						stack = append(stack, obj)
-					}else {
-						if constructor := last.GetPropertyType(tok.Value); constructor != nil {
-							if obj := constructor(val); obj != nil {
-								stack = append(stack, *obj)
-							}
-						} else {
-							stack = append(stack, *types.ObjectConstructor(val))
+					if constructor := last.GetPropertyType(tok.Value); constructor != nil {
+						if obj := constructor(val); obj != nil {
+							stack = append(stack, *obj)
 						}
+					} else {
+						stack = append(stack, *types.ObjectConstructor(val))
 					}
 				}
 			}
 
-		case Plus:
-			if len(stack) == 0 {
-				sign = false
-				continue
+		case Plus, Minus, Star, Slash, Ampersand, LessThan, GreaterThan, LessThanEqual, GreaterThanEqual, DoubleEquals:
+			opMethods := map[TokenType]string{
+				Plus:            "add",
+				Minus:           "sub",
+				Star:            "mul",
+				Slash:           "div",
+				Ampersand:       "and",
+				LessThan:        "lt",
+				GreaterThan:     "gt",
+				LessThanEqual:   "le",
+				GreaterThanEqual:"ge",
+				DoubleEquals:    "eq",
 			}
-			last := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			lastType = last.Class
-			val, ok := last.Get("add")
-			if !ok {
-				typeError = true
-				continue
-			}
-			fn, ok := val.(func(core.Object) interface{})
-			if !ok {
-				Log("COMPILER ERROR")
-				return nil
-			}
-			lastMessage = fn
 
-		case Minus:
-			if lastMessage != nil {
-				sign = !sign
-				continue
+			if _, ok := r.globalScope[lastVar]; lastVar != "" && !ok {
+				stack = append(stack, errors.NewNameError(fmt.Sprintf("'%s' is not defined", lastVar)).Object)
+				lastVar = ""
 			}
-			if len(stack) == 0 {
-				sign = !sign
-				continue
-			}
-			last := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			lastType = last.Class
-			val, ok := last.Get("sub")
-			if !ok {
-				typeError = true
-				continue
-			}
-			fn, ok := val.(func(core.Object) interface{})
-			if !ok {
-				Log("COMPILER ERROR")
-				return nil
-			}
-			lastMessage = fn
 
-		case Star:
-			if len(stack) == 0 {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
-				return nil
+			if tok.Type == Plus || tok.Type == Minus {
+				if tok.Type == Plus {
+					if len(stack) == 0 {
+						sign = false
+						continue
+					}
+				} else {
+					if lastMessage != nil {
+						sign = !sign
+						continue
+					}
+					if len(stack) == 0 {
+						sign = !sign
+						continue
+					}
+				}
+			} else {
+				if len(stack) == 0 {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+					return nil
+				}
 			}
-			last := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			lastType = last.Class
-			val, ok := last.Get("mul")
-			if !ok {
-				typeError = true
-				continue
-			}
-			fn, ok := val.(func(core.Object) interface{})
-			if !ok {
-				Log("COMPILER ERROR")
-				return nil
-			}
-			lastMessage = fn
 
-		case Slash:
-			if len(stack) == 0 {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
-				return nil
-			}
 			last := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 			lastType = last.Class
-			val, ok := last.Get("div")
-			if !ok {
-				typeError = true
-				continue
-			}
-			fn, ok := val.(func(core.Object) interface{})
-			if !ok {
-				Log("COMPILER ERROR")
-				return nil
-			}
-			lastMessage = fn
-		
-		case Ampersand:
-			if len(stack) == 0 {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
-				return nil
-			}
-			last := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			lastType = last.Class
-			val, ok := last.Get("and")
-			if !ok {
-				typeError = true
-				continue
-			}
-			fn, ok := val.(func(core.Object) interface{})
-			if !ok {
-				Log("COMPILER ERROR")
-				return nil
-			}
-			lastMessage = fn
 
-		case LessThan:
-			if len(stack) == 0 {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
-				return nil
-			}
-			last := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			lastType = last.Class
-			val, ok := last.Get("lt")
+			val, ok := last.Get(opMethods[tok.Type])
 			if !ok {
 				typeError = true
 				continue
 			}
+
 			fn, ok := val.(func(core.Object) interface{})
 			if !ok {
 				Log("COMPILER ERROR")
 				return nil
 			}
 			lastMessage = fn
-
-		case GreaterThan:
-			if len(stack) == 0 {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
-				return nil
-			}
-			last := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			lastType = last.Class
-			val, ok := last.Get("gt")
-			if !ok {
-				typeError = true
-				continue
-			}
-			fn, ok := val.(func(core.Object) interface{})
-			if !ok {
-				Log("COMPILER ERROR")
-				return nil
-			}
-			lastMessage = fn
-
-		case LessThanEqual:
-			if len(stack) == 0 {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
-				return nil
-			}
-			last := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			lastType = last.Class
-			val, ok := last.Get("le")
-			if !ok {
-				typeError = true
-				continue
-			}
-			fn, ok := val.(func(core.Object) interface{})
-			if !ok {
-				Log("COMPILER ERROR")
-				return nil
-			}
-			lastMessage = fn
-
-		case GreaterThanEqual:
-			if len(stack) == 0 {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
-				return nil
-			}
-			last := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			lastType = last.Class
-			val, ok := last.Get("ge")
-			if !ok {
-				typeError = true
-				continue
-			}
-			fn, ok := val.(func(core.Object) interface{})
-			if !ok {
-				Log("COMPILER ERROR")
-				return nil
-			}
-			lastMessage = fn
-
-		case DoubleEquals:
-			if len(stack) == 0 {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
-				return nil
-			}
-			last := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			lastType = last.Class
-			val, ok := last.Get("eq")
-			if !ok {
-				typeError = true
-				continue
-			}
-			fn, ok := val.(func(core.Object) interface{})
-			if !ok {
-				Log("COMPILER ERROR")
-				return nil
-			}
-			lastMessage = fn	
 		}
+	}
+
+	if _, ok := r.globalScope[lastVar]; lastVar != "" && !ok {
+		stack = append(stack, errors.NewNameError(fmt.Sprintf("'%s' is not defined", lastVar)).Object)
 	}
 
 	if len(stack) > 0 {

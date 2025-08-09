@@ -5,10 +5,16 @@ def read_tests(filename):
         lines = [l.strip() for l in f if l.strip() and not l.startswith("@")]
     inputs, outputs = [], []
     for line in lines:
-        if ',' not in line: continue
+        if ',' not in line:
+            continue
         inp, out = line.split(",", 1)
-        inputs.append(inp.encode().decode("unicode_escape"))
-        outputs.append([o.strip() for o in out.encode().decode("unicode_escape").split("\n")])
+        inp = inp.encode().decode("unicode_escape")
+        out_decoded = out.encode().decode("unicode_escape").strip()
+        if out_decoded == "":
+            outputs.append([])
+        else:
+            outputs.append([o.strip() for o in out_decoded.split("\n")])
+        inputs.append(inp)
     return inputs, outputs
 
 def run_repl(inputs):
@@ -20,8 +26,8 @@ def run_repl(inputs):
         text=True
     )
     stdout, stderr = proc.communicate(input="\n".join(inputs) + "\nexit\n")
-    out_lines = [l.strip() for l in stdout.splitlines() if l.strip()]
-    err_lines = [l.strip() for l in stderr.splitlines() if l.strip()]
+    out_lines = [l.strip() for l in stdout.splitlines()]
+    err_lines = [l.strip() for l in stderr.splitlines()]
     return out_lines, err_lines
 
 def check_results(inputs, expected_outputs, actual_outputs, stream_name):

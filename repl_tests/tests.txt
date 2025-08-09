@@ -27,6 +27,15 @@ true+1,TypeError: Message doesn't exists for Bool and Integer
 false+1,TypeError: Message doesn't exists for Bool and Integer
 1+false,TypeError: Message doesn't exists for Integer and Bool
 
+@ Assigment
+a,NameError: 'a' is not defined
+a+1,TypeError: Message doesn't exists for NameError and Integer
+1+a,TypeError: Message doesn't exists for Integer and NameError
+a := 1,
+a,1
+a+1,2
+1+a,2
+
 @ Periods
 1.,1
 1. 2,1\n2

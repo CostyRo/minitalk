@@ -47,11 +47,13 @@ def check_results(inputs, expected_outputs, actual_outputs, stream_name):
     return passed, failed
 
 def main():
+    SETUP = 1
     err_inputs, err_expected = read_tests("repl_tests/syntax_errors.txt")
     good_inputs, good_expected = read_tests("repl_tests/tests.txt")
 
     _, err_output = run_repl(err_inputs)
     err_passed, err_failed = check_results(err_inputs, err_expected, err_output, "stderr")
+    err_passed -= SETUP
 
     good_output, _ = run_repl(good_inputs)
     good_passed, good_failed = check_results(good_inputs, good_expected, good_output, "stdout")

@@ -1,3 +1,5 @@
+a:=1,
+
 :=,SyntaxError: invalid syntax
 *1,SyntaxError: invalid syntax
 /1,SyntaxError: invalid syntax
@@ -8,6 +10,9 @@
 <=1,SyntaxError: invalid syntax
 ==1,SyntaxError: invalid syntax
 (),SyntaxError: invalid syntax
+1 plus 1,SyntaxError: invalid syntax
+#[1] plus #[1],SyntaxError: invalid syntax
+1 plus a,SyntaxError: invalid syntax
 2r2,SyntaxError: invalid number in base 2
 2r2+1,SyntaxError: invalid number in base 2
 0r1,SyntaxError: invalid base 0

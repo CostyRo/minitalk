@@ -14,7 +14,7 @@ type IntegerObject struct {
 func NewIntegerObject(value int64) *IntegerObject {
 	obj := core.NewObject(value, "Integer")
 
-	obj.Set("add", func(other core.Object) interface{} {
+	obj.Set("plus", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Integer":
 			if val, ok := other.Self.(int64); ok {
@@ -27,7 +27,7 @@ func NewIntegerObject(value int64) *IntegerObject {
 		}
 		return nil
 	})
-	obj.Set("sub", func(other core.Object) interface{} {
+	obj.Set("minus", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Integer":
 			if val, ok := other.Self.(int64); ok {

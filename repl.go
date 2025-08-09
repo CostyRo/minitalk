@@ -32,6 +32,7 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 	var stack []core.Object
 	var lastType string
 	var lastMessage any
+	var binaryMessage any
 	var lastVar string
 	assigment := false
 	typeError := false
@@ -111,6 +112,9 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				return nil
 			}
 			assigment = true
+
+		case Colon:
+			lastMessage = binaryMessage
 
 		case Symbol, Character, String, Integer, Float, RadixNumber, True, False, Nil:
 			var typeName string
@@ -196,6 +200,10 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				stack = append(stack, objResult)
 				lastMessage = nil
 			} else {
+				if binaryMessage != nil {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+					return nil
+				}
 				if assigment {
 					r.globalScope[lastVar] = obj
 					lastVar = ""
@@ -305,8 +313,32 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				elements = append(elements, byte(intVal))
 			}
 
-			if valid {
-				stack = append(stack, types.NewByteArrayObject(elements).Object)
+			if !valid {
+				continue
+			}
+			obj := types.NewByteArrayObject(elements).Object
+			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+				result := fn(obj)
+				objResult, ok := result.(core.Object)
+				if !ok {
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and ByteArray", lastType))
+					stack = append(stack, err.Object)
+					continue
+				}
+				stack = append(stack, objResult)
+				lastMessage = nil
+			} else {
+				if binaryMessage != nil {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+					return nil
+				}
+				if assigment {
+					r.globalScope[lastVar] = obj
+					lastVar = ""
+					assigment = false
+				} else {
+					stack = append(stack, obj)
+				}
 			}
 
 		case Identifier:
@@ -331,6 +363,9 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 					stack = append(stack, err.Object)
 					continue
 				}
+			} else if inScope && binaryMessage != nil {
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
 			}
 
 			if len(stack) == 0 {
@@ -347,7 +382,8 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 					messageError = true
 					continue
 				}
-				if _, ok := val.(func(core.Object) interface{}); ok {
+				if fn, ok := val.(func(core.Object) interface{}); ok{
+					binaryMessage = fn
 				} else if obj, ok := val.(core.Object); ok {
 					stack = append(stack, obj)
 				} else {
@@ -363,8 +399,8 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 
 		case Plus, Minus, Star, Slash, Ampersand, LessThan, GreaterThan, LessThanEqual, GreaterThanEqual, DoubleEquals:
 			opMethods := map[TokenType]string{
-				Plus:            "add",
-				Minus:           "sub",
+				Plus:            "plus",
+				Minus:           "minus",
 				Star:            "mul",
 				Slash:           "div",
 				Ampersand:       "and",

@@ -14,7 +14,7 @@ type ByteArrayObject struct {
 func NewByteArrayObject(data []byte) *ByteArrayObject {
 	obj := core.NewObject(data, "ByteArray")
 
-	obj.Set("add", func(other core.Object) interface{} {
+	obj.Set("plus", func(other core.Object) interface{} {
 		if other.Class == "ByteArray" {
 			if val, ok := other.Self.([]byte); ok {
 				newData := append(append([]byte{}, data...), val...)

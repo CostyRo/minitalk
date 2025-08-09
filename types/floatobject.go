@@ -14,7 +14,7 @@ type FloatObject struct {
 func NewFloatObject(value float64) *FloatObject {
 	obj := core.NewObject(value, "Float")
 
-	obj.Set("add", func(other core.Object) interface{} {
+	obj.Set("plus", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":
 			if val, ok := other.Self.(float64); ok {
@@ -27,7 +27,7 @@ func NewFloatObject(value float64) *FloatObject {
 		}
 		return nil
 	})
-	obj.Set("sub", func(other core.Object) interface{} {
+	obj.Set("minus", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Float":
 			if val, ok := other.Self.(float64); ok {

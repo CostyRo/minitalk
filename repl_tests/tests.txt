@@ -55,6 +55,7 @@ false+1,TypeError: Message doesn't exists for Bool and Integer
 1.0+1.0,2.0000000000
 +1+1,2
 'a'+'b','ab'
+#[1]+#[2],#[1 2]
 
 @ Substraction
 1-1,0

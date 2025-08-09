@@ -24,7 +24,7 @@ false,false
 $a,$a
 'a','a'
 #[1 2.0 #3 $4 '5' +6 2r111 true a],#[1 2 3 52 5 6 7 1 1]
-#(#[1 2 3 4] 'four' -4.0 #four $a a nil),#(#[1 2 3 4] 'four' -4.0000000000 four $a 1 nil)
+#(#[1 2 3 4] 'four' -4.0 #four $a a nil #(1 2 3)),#(#[1 2 3 4] 'four' -4.0000000000 four $a 1 nil #(1 2 3))
 
 @ ByteArray Parsing Errors
 #[256],ValueError: Invalid byte value: 256

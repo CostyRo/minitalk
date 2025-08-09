@@ -60,29 +60,16 @@ type tokenExpr struct {
 }
 
 var tokenExprs = []tokenExpr{
-	// Character (e.g. $x)
 	{Character, regexp.MustCompile(`^\$.`)},
-
-	// Symbol (e.g. #'symbol' or #identifier)
-	{Symbol, regexp.MustCompile(`#'([^']|'{2})*'|#[a-zA-Z0-9_]+`)},
-
-	// Float (e.g. 123.45, 4.5e+6)
+	{Symbol, regexp.MustCompile(`^#'([^']|'{2})*'|^#[a-zA-Z0-9_]+`)},
 	{Float, regexp.MustCompile(`^(?:[0-9]+\.[0-9]+(?:[eE][+-]?[0-9]+)?|[0-9]+(?:[eE][+-]?[0-9]+))`)},
-
-	// Radix number (e.g. 2r1010, 16rA000)
 	{RadixNumber, regexp.MustCompile(`^[0-9]+r[0-9A-Fa-f]+`)},
-
-	// Integer
 	{Integer, regexp.MustCompile(`^[0-9]+`)},
-
-	// Keywords
 	{Self_, regexp.MustCompile(`^self\b`)},
 	{Super, regexp.MustCompile(`^super\b`)},
 	{Nil, regexp.MustCompile(`^nil\b`)},
 	{True, regexp.MustCompile(`^true\b`)},
 	{False, regexp.MustCompile(`^false\b`)},
-
-	// Operators
 	{LessThanEqual, regexp.MustCompile(`^<=`)},
 	{GreaterThanEqual, regexp.MustCompile(`^>=`)},
 	{DoubleEquals, regexp.MustCompile(`^==`)},
@@ -94,8 +81,6 @@ var tokenExprs = []tokenExpr{
 	{Star, regexp.MustCompile(`^\*`)},
 	{Slash, regexp.MustCompile(`^/`)},
 	{Ampersand, regexp.MustCompile(`^&`)},
-
-	// Symbols
 	{LParen, regexp.MustCompile(`^\(`)},
 	{RParen, regexp.MustCompile(`^\)`)},
 	{LBracket, regexp.MustCompile(`^\[`)},
@@ -105,24 +90,29 @@ var tokenExprs = []tokenExpr{
 	{Colon, regexp.MustCompile(`^:`)},
 	{Pipe, regexp.MustCompile(`^\|`)},
 	{Caret, regexp.MustCompile(`^\^`)},
-
-	// Identifier
 	{Identifier, regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*`)},
-
-	// String (e.g. 'hello', 'it''s fine')
 	{String, regexp.MustCompile(`^'([^']|'')*'`)},
-
-	// Array (e.g. #(...))
-	{Array, regexp.MustCompile(`^#\([^)]*\)`)},
-
-	// ByteArray (e.g. #[...])
 	{ByteArray, regexp.MustCompile(`^#\[[^\]]*\]`)},
-
-	// Comment (e.g. "...")
 	{Comment, regexp.MustCompile(`^"[^"]*"`)},
-
-	// Whitespace
 	{Whitespace, regexp.MustCompile(`^[ \t\r\n]+`)},
+}
+
+func scanArray(input string) (string, int) {
+	if len(input) < 2 || input[0] != '#' || input[1] != '(' {
+		return "", 0
+	}
+	level := 0
+	for i, ch := range input {
+		if ch == '(' {
+			level++
+		} else if ch == ')' {
+			level--
+			if level == 0 {
+				return input[:i+1], i + 1
+			}
+		}
+	}
+	return "", 0
 }
 
 func Lex(input string) []Token {
@@ -130,9 +120,26 @@ func Lex(input string) []Token {
 	pos := 0
 
 	for len(input) > 0 {
-		matched := false
+		if len(input) >= 2 && input[0] == '#' && input[1] == '(' {
+			val, length := scanArray(input)
+			if val != "" {
+				tokens = append(tokens, Token{
+					Type:  Array,
+					Value: val,
+					Start: pos,
+					End:   pos + length,
+				})
+				input = input[length:]
+				pos += length
+				continue
+			}
+		}
 
+		matched := false
 		for _, te := range tokenExprs {
+			if te.typ == Array {
+				continue
+			}
 			if loc := te.re.FindStringIndex(input); loc != nil && loc[0] == 0 {
 				val := input[:loc[1]]
 				tokens = append(tokens, Token{
@@ -147,7 +154,6 @@ func Lex(input string) []Token {
 				break
 			}
 		}
-
 		if !matched {
 			tokens = append(tokens, Token{
 				Type:  Illegal,

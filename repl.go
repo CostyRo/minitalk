@@ -26,7 +26,7 @@ func NewRepl() *Repl {
 }
 
 func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) {
-	valStr := value[2 : len(value)-1]
+	valStr := value[2:len(value)-1]
 	innerTokens := Lex(valStr)
 
 	var elements []byte
@@ -75,7 +75,7 @@ func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) 
 			}
 
 		case String:
-			strVal := t.Value[1 : len(t.Value)-1]
+			strVal := t.Value[1:len(t.Value)-1]
 			intVal, err = strconv.ParseInt(strVal, 10, 64)
 			if err != nil {
 				err = fmt.Errorf("invalid literal: %s", t.Value)
@@ -131,15 +131,14 @@ func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) 
 }
 
 func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, bool) {
-	valStr := value[2 : len(value)-1]
+	valStr := value[2:len(value)-1]
 	innerTokens := Lex(valStr)
 
 	var elements []core.Object
 	valid := true
 	minus := false
 
-	for i := 0; i < len(innerTokens); i++ {
-		t := innerTokens[i]
+	for _, t := range innerTokens {
 		var obj core.Object
 		var err error
 
@@ -196,7 +195,7 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
 				return nil, false
 			}
-			obj = types.NewStringObject(t.Value[1 : len(t.Value)-1]).Object
+			obj = types.NewStringObject(t.Value[1:len(t.Value)-1]).Object
 
 		case Symbol:
 			if minus {
@@ -238,7 +237,10 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 			}
 
 		case ByteArray:
-
+			if minus {
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil, false
+			}
 			bytes, ok := parseByteArray(t.Value, r, stack)
 			if ok {
 				obj = types.NewByteArrayObject(bytes).Object
@@ -247,10 +249,15 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 			}
 
 		case Array:
+			if minus {
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil, false
+			}
 			nested, ok := parseArray(t.Value, r, stack)
-			if ok && !minus {
+			if ok {
 				obj = types.NewArrayObject(nested).Object
 			} else {
+				fmt.Println("A")
 				err = fmt.Errorf("invalid array literal: %s", t.Value)
 			}
 
@@ -390,7 +397,7 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 					return nil
 				}
 				typeName = "String"
-				val := tok.Value[1 : len(tok.Value)-1]
+				val := tok.Value[1:len(tok.Value)-1]
 				obj = types.NewStringObject(val).Object
 
 			case Integer:

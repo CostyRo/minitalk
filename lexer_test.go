@@ -109,7 +109,7 @@ func TestExtraCode(t *testing.T) {
         < > <= >= == :=
         42 123.45 1.2e3 16rA000 2r1010
         'he''llo' #1 #'symbol' $x
-        #($a #a 'b' 2 2.0) #[1 2 3]
+        #($a #a 'b' 2 2.0 #(1)) #[1 2 3]
         "This is a comment"
     `
 
@@ -129,7 +129,7 @@ func TestExtraCode(t *testing.T) {
 		{Symbol, "#1", 0, 0},
 		{Symbol, "#'symbol'", 0, 0},
 		{Character, "$x", 0, 0},
-		{Array, "#($a #a 'b' 2 2.0)", 0, 0},
+		{Array, "#($a #a 'b' 2 2.0 #(1))", 0, 0},
 		{ByteArray, "#[1 2 3]", 0, 0},
 		{Comment, "\"This is a comment\"", 0, 0},
 	}

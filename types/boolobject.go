@@ -34,6 +34,37 @@ func NewBoolObject(value bool) *BoolObject {
 		}
 		return NewBoolObject(value == otherVal).Object
 	})
+	obj.Set("not", !value, ObjectConstructor)
+	obj.Set("ifTrue", func(other core.Object) interface{} {
+		if other.Class != "CodeBlock" {
+			return nil
+		}
+		noArgsVal, _ := other.Get("no_arguments")
+		if noArgsVal.(int64) != 0 {
+			return errors.NewValueError("CodeBlock must have no arguments").Object
+		}
+		if !value {
+			return core.Object{}
+		}
+		valFn, _ := other.Get("value")
+		result := valFn.(func(...core.Object) interface{})()
+		return result
+	})
+	obj.Set("ifFalse", func(other core.Object) interface{} {
+		if other.Class != "CodeBlock" {
+			return nil
+		}
+		noArgsVal, _ := other.Get("no_arguments")
+		if noArgsVal.(int64) != 0 {
+			return errors.NewValueError("CodeBlock must have no arguments").Object
+		}
+		if value {
+			return core.Object{}
+		}
+		valFn, _ := other.Get("value")
+		result := valFn.(func(...core.Object) interface{})()
+		return result
+	})
 	iVal := int64(0)
 	if value {
 		iVal = 1

@@ -280,3 +280,13 @@ $a toArray,TypeError: Invalid conversion to Array
 #(1) toCharacter,TypeError: Invalid conversion to Character
 #(1) toString,TypeError: Invalid conversion to String
 #(1) toSymbol,TypeError: Invalid conversion to Symbol
+
+@ Not
+true not,false
+false not,true
+
+@ Ifs
+true ifTrue: [1],1
+true ifFalse: [1],nil
+false ifTrue: [1],nil
+false ifFalse: [1],1

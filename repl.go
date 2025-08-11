@@ -371,8 +371,20 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				bracket--
 				if bracket == 0 {
 					pipe = false
-					obj := types.NewCodeBlockObject(argumentsCodeBlock, locCodeBlock, r)
-					stack = append(stack, obj.Object)
+					obj := types.NewCodeBlockObject(argumentsCodeBlock, locCodeBlock, r).Object
+					if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+						result := fn(obj)
+						objResult, ok := result.(core.Object)
+						if !ok {
+							err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and CodeBlock", lastType))
+							stack = append(stack, err.Object)
+							continue
+						}
+						stack = append(stack, objResult)
+						lastMessage = nil
+					} else {
+						stack = append(stack, obj)
+					}
 				} else if pipe {
 					locCodeBlock[len(locCodeBlock)-1] = append(
 						locCodeBlock[len(locCodeBlock)-1],

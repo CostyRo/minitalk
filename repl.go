@@ -307,6 +307,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 	var results []core.Object
 
 	var subTokens []tokens.Token
+	var rvalue []tokens.Token
 	var stack []core.Object
 	var argumentsCodeBlock []string
 	var lastType string
@@ -333,6 +334,13 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 		plus = false
 		if tok.Type == tokens.Whitespace {
 			continue
+		}
+
+		if assigment {
+			if tok.Type != tokens.Period {
+				rvalue = append(rvalue, tok)
+				continue
+			}
 		}
 
 		if paren {
@@ -443,6 +451,11 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 			if len(stack) > 0 {
 				result := stack[len(stack)-1]
 				results = append(results, result)
+			}
+
+			if assigment {
+				subResult := r.ProcessLine(rvalue)
+				r.globalScope[lastVar] = subResult[len(subResult)-1]
 			}
 
 			stack = nil
@@ -601,13 +614,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
 					return nil
 				}
-				if assigment {
-					r.globalScope[lastVar] = obj
-					lastVar = ""
-					assigment = false
-				} else {
-					stack = append(stack, obj)
-				}
+				stack = append(stack, obj)
 			}
 
 		case tokens.ByteArray, tokens.Array:
@@ -645,13 +652,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
 					return nil
 				}
-				if assigment {
-					r.globalScope[lastVar] = obj
-					lastVar = ""
-					assigment = false
-				} else {
-					stack = append(stack, obj)
-				}
+				stack = append(stack, obj)
 			}
 
 		case tokens.Identifier:
@@ -793,13 +794,15 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 		}
 	}
 
-	if _, ok := r.globalScope[lastVar]; lastVar != "" && !ok {
-		if len(stack) == 0 {
-			stack = append(stack, errors.NewNameError(fmt.Sprintf("'%s' is not defined", lastVar)).Object)
-		} else {
-			r.globalScope[lastVar] = stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-		}
+	if _, ok := r.globalScope[lastVar]; lastVar != "" && !ok && !assigment {
+		stack = append(stack, errors.NewNameError(fmt.Sprintf("'%s' is not defined", lastVar)).Object)
+	}
+
+	if assigment {
+		subResult := r.ProcessLine(rvalue)
+		obj := subResult[len(subResult)-1]
+		results = append(results, obj)
+		r.globalScope[lastVar] = obj
 	}
 
 	if messageError {

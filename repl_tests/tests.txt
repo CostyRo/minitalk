@@ -2,7 +2,8 @@
 a,NameError: 'a' is not defined
 a+1,TypeError: Message doesn't exists for NameError and Integer
 1+a,TypeError: Message doesn't exists for Integer and NameError
-a := 1,
+a := 1,1
+b := a + 1,2
 a,1
 a+1,2
 1+a,2

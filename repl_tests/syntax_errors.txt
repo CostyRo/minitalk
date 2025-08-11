@@ -1,21 +1,23 @@
 a:=1,
 
--a,SyntaxError: invalid syntax
+-a,SyntaxError: invalid unary minus for variables
 :=,SyntaxError: invalid syntax
-*1,SyntaxError: invalid syntax
-/1,SyntaxError: invalid syntax
-&1,SyntaxError: invalid syntax
->1,SyntaxError: invalid syntax
-<1,SyntaxError: invalid syntax
->=1,SyntaxError: invalid syntax
-<=1,SyntaxError: invalid syntax
-==1,SyntaxError: invalid syntax
-(),SyntaxError: invalid syntax
--$a,SyntaxError: invalid syntax
--'hello',SyntaxError: invalid syntax
--true,SyntaxError: invalid syntax
--false,SyntaxError: invalid syntax
--nil,SyntaxError: invalid syntax
++,SyntaxError: invalid syntax
+-,SyntaxError: invalid syntax
+*,SyntaxError: invalid syntax
+/,SyntaxError: invalid syntax
+&,SyntaxError: invalid syntax
+>,SyntaxError: invalid syntax
+<,SyntaxError: invalid syntax
+>=,SyntaxError: invalid syntax
+<=,SyntaxError: invalid syntax
+==,SyntaxError: invalid syntax
+(),SyntaxError: empty parenthesis
+-$a,SyntaxError: invalid unary minus for Character
+-'hello',SyntaxError: invalid unary minus for String
+-true,SyntaxError: invalid unary minus for Bool
+-false,SyntaxError: invalid unary minus for Bool
+-nil,SyntaxError: invalid unary minus for Nil
 1 plus 1,SyntaxError: invalid syntax
 #[1] plus #[1],SyntaxError: invalid syntax
 1 plus a,SyntaxError: invalid syntax

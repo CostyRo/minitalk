@@ -26,6 +26,11 @@ $a,$a
 #[1 2.0 #3 $4 '5' +6 2r111 true a],#[1 2 3 52 5 6 7 1 1]
 #(#[1 2 3 4] 'four' -4.0 #four $a a nil #(1 2 3)),#(#[1 2 3 4] 'four' -4.0000000000 four $a 1 nil #(1 2 3))
 
+@ CodeBlocks
+[5] value,5
+[:x | x+1] value: 1,2
+[:x :y | x+y] value: 1 value: 2,3
+
 @ ByteArray Parsing Errors
 #[256],ValueError: Invalid byte value: 256
 #[-1],ValueError: Invalid byte value: -1

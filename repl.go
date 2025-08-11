@@ -8,6 +8,7 @@ import (
 
 	"github.com/peterh/liner"
 
+	"minitalk/tokens"
 	"minitalk/types"
 	"minitalk/types/core"
 	"minitalk/types/errors"
@@ -16,6 +17,30 @@ import (
 type Repl struct {
 	globalScope map[string]core.Object
 	liner       *liner.State
+}
+
+func (r *Repl) GetVar(name string) (core.Object, bool) {
+	val, ok := r.globalScope[name]
+	return val, ok
+}
+
+func (r *Repl) SetVar(name string, val core.Object) {
+	if r.globalScope == nil {
+		r.globalScope = make(map[string]core.Object)
+	}
+	r.globalScope[name] = val
+}
+
+func (r *Repl) DeleteVar(name string) {
+	delete(r.globalScope, name)
+}
+
+func (r *Repl) GetNames() []string {
+	names := make([]string, 0, len(r.globalScope))
+	for name := range r.globalScope {
+		names = append(names, name)
+	}
+	return names
 }
 
 func NewRepl() *Repl {
@@ -27,7 +52,7 @@ func NewRepl() *Repl {
 
 func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) {
 	valStr := value[2:len(value)-1]
-	innerTokens := Lex(valStr)
+	innerTokens := tokens.Lex(valStr)
 
 	var elements []byte
 	valid := true
@@ -38,17 +63,17 @@ func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) 
 		var err error
 
 		switch t.Type {
-		case Whitespace, Plus:
+		case tokens.Whitespace, tokens.Plus:
 			continue
 
-		case Minus:
+		case tokens.Minus:
 			minus = true
 			continue
 
-		case Integer:
+		case tokens.Integer:
 			intVal, err = strconv.ParseInt(t.Value, 10, 64)
 
-		case RadixNumber:
+		case tokens.RadixNumber:
 			parts := strings.Split(t.Value, "r")
 			base, _ := strconv.ParseInt(parts[0], 10, 32)
 			intVal, err = strconv.ParseInt(parts[1], int(base), 64)
@@ -61,12 +86,12 @@ func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) 
 				return nil, false
 			}
 
-		case Float:
+		case tokens.Float:
 			var floatVal float64
 			floatVal, err = strconv.ParseFloat(t.Value, 64)
 			intVal = int64(floatVal)
 
-		case Character:
+		case tokens.Character:
 			runes := []rune(t.Value[1:])
 			if len(runes) != 1 {
 				err = fmt.Errorf("invalid literal: %s", t.Value)
@@ -74,26 +99,26 @@ func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) 
 				intVal = int64(runes[0])
 			}
 
-		case String:
+		case tokens.String:
 			strVal := t.Value[1:len(t.Value)-1]
 			intVal, err = strconv.ParseInt(strVal, 10, 64)
 			if err != nil {
 				err = fmt.Errorf("invalid literal: %s", t.Value)
 			}
 
-		case Symbol:
+		case tokens.Symbol:
 			symName := t.Value[1:]
 			intVal, err = strconv.ParseInt(symName, 10, 64)
 			if err != nil {
 				err = fmt.Errorf("invalid literal: %s", t.Value)
 			}
 
-		case True:
+		case tokens.True:
 			intVal = 1
-		case False:
+		case tokens.False:
 			intVal = 0
 
-		case Identifier:
+		case tokens.Identifier:
 			obj, inScope := r.globalScope[t.Value]
 			if inScope {
 				ok := false
@@ -132,7 +157,7 @@ func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) 
 
 func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, bool) {
 	valStr := value[2:len(value)-1]
-	innerTokens := Lex(valStr)
+	innerTokens := tokens.Lex(valStr)
 
 	var elements []core.Object
 	valid := true
@@ -143,21 +168,21 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 		var err error
 
 		switch t.Type {
-		case Whitespace, Plus:
+		case tokens.Whitespace, tokens.Plus:
 			continue
 
-		case Minus:
+		case tokens.Minus:
 			minus = true
 			continue
 
-		case Integer:
+		case tokens.Integer:
 			intVal, _ := strconv.ParseInt(t.Value, 10, 64)
 			if minus {
 				intVal = -intVal
 			}
 			obj = types.NewIntegerObject(intVal).Object
 
-		case RadixNumber:
+		case tokens.RadixNumber:
 			parts := strings.Split(t.Value, "r")
 			base, _ := strconv.ParseInt(parts[0], 10, 32)
 			var intVal int64
@@ -175,7 +200,7 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 			}
 			obj = types.NewIntegerObject(intVal).Object
 
-		case Float:
+		case tokens.Float:
 			var floatVal float64
 			floatVal, _ = strconv.ParseFloat(t.Value, 64)
 			if minus {
@@ -183,51 +208,51 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 			}
 			obj = types.NewFloatObject(floatVal).Object
 
-		case Character:
+		case tokens.Character:
 			if minus {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Character")
 				return nil, false
 			}
 			obj = types.NewCharacterObject([]rune(t.Value[1:])[0]).Object
 
-		case String:
+		case tokens.String:
 			if minus {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for String")
 				return nil, false
 			}
 			obj = types.NewStringObject(t.Value[1:len(t.Value)-1]).Object
 
-		case Symbol:
+		case tokens.Symbol:
 			if minus {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Symbol")
 				return nil, false
 			}
 			obj = types.NewSymbolObject(t.Value[1:]).Object
 
-		case True:
+		case tokens.True:
 			if minus {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Bool")
 				return nil, false
 			}
 			obj = types.NewBoolObject(true).Object
 
-		case False:
+		case tokens.False:
 			if minus {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Character")
 				return nil, false
 			}
 			obj = types.NewBoolObject(false).Object
 
-		case Nil:
+		case tokens.Nil:
 			if minus {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Nil")
 				return nil, false
 			}
 			obj = *core.NewObject(nil, "Nil")
 
-		case Identifier:
+		case tokens.Identifier:
 			if minus {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for variables")
 				return nil, false
 			}
 			var inScope bool
@@ -236,9 +261,9 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 				*stack = append(*stack, errors.NewNameError(fmt.Sprintf("'%s' is not defined", t.Value)).Object)
 			}
 
-		case ByteArray:
+		case tokens.ByteArray:
 			if minus {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for ByteArray")
 				return nil, false
 			}
 			bytes, ok := parseByteArray(t.Value, r, stack)
@@ -248,9 +273,9 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 				err = fmt.Errorf("invalid bytearray literal: %s", t.Value)
 			}
 
-		case Array:
+		case tokens.Array:
 			if minus {
-				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Array")
 				return nil, false
 			}
 			nested, ok := parseArray(t.Value, r, stack)
@@ -278,36 +303,46 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 	return elements, valid
 }
 
-func (r *Repl) processLine(tokens []Token) []core.Object {
+func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 	var results []core.Object
 
-	var subTokens []Token
+	var subTokens []tokens.Token
 	var stack []core.Object
+	var argumentsCodeBlock []string
 	var lastType string
 	var lastMessage any
 	var binaryMessage any
 	var lastVar string
+	locCodeBlock := [][][]string{{}}
 	assigment := false
 	typeError := false
 	messageError := false
-	sign := false
+	minus := false
+	plus := false
 	paren := false
-	if len(tokens) == 1 && tokens[0].Type == RParen {
+	bracket := 0
+	argumentCodeBlock := false
+	pipe := false
+	nonPipe := false
+
+	if len(toks) == 1 && toks[0].Type == tokens.RParen {
 		return nil
 	}
-	for _, tok := range tokens {
-		if tok.Type == Whitespace {
+
+	for _, tok := range toks {
+		plus = false
+		if tok.Type == tokens.Whitespace {
 			continue
 		}
 
 		if paren {
 			subTokens = append(subTokens, tok)
 			switch tok.Type {
-			case RParen:
+			case tokens.RParen:
 				if !paren {
 					subTokens = subTokens[:len(subTokens)-1]
 				}
-			case LParen:
+			case tokens.LParen:
 				paren = true
 				continue
 			default:
@@ -315,16 +350,73 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 			}
 		}
 
+		if bracket != 0 {
+			switch tok.Type {
+			case tokens.LBracket:
+				bracket++
+				if pipe {
+					locCodeBlock[len(locCodeBlock)-1] = append(
+						locCodeBlock[len(locCodeBlock)-1],
+						[]string{TokenTypeToString(tok.Type), tok.Value})
+				}
+			case tokens.RBracket:
+				bracket--
+				if bracket == 0 {
+					pipe = false
+					obj := types.NewCodeBlockObject(argumentsCodeBlock, locCodeBlock, r)
+					stack = append(stack, obj.Object)
+				} else if pipe {
+					locCodeBlock[len(locCodeBlock)-1] = append(
+						locCodeBlock[len(locCodeBlock)-1],
+						[]string{TokenTypeToString(tok.Type), tok.Value})
+				}
+			case tokens.Colon:
+				argumentCodeBlock = true
+			case tokens.Identifier:
+				if pipe {
+					locCodeBlock[len(locCodeBlock)-1] = append(
+						locCodeBlock[len(locCodeBlock)-1],
+						[]string{TokenTypeToString(tok.Type), tok.Value})
+				} else if argumentCodeBlock {
+					argumentsCodeBlock = append(argumentsCodeBlock, tok.Value)
+					argumentCodeBlock = false
+				}
+			case tokens.Pipe:
+				pipe = true
+				if nonPipe {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid characters in arguments list of a code block")
+					return nil
+				}
+			case tokens.Period:
+				if pipe {
+					locCodeBlock = append(locCodeBlock, [][]string{})
+				} else {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid characters in arguments list of a code block")
+					return nil
+				}
+			default:
+				locCodeBlock[len(locCodeBlock)-1] = append(
+					locCodeBlock[len(locCodeBlock)-1],
+					[]string{TokenTypeToString(tok.Type), tok.Value})
+				nonPipe = true
+			}
+			continue
+		}
+
 		switch tok.Type {
-		case LParen:
+		case tokens.Illegal:
+			fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+			return nil
+
+		case tokens.LParen:
 			paren = true
 
-		case RParen:
+		case tokens.RParen:
 			if paren {
-				subResult := r.processLine(subTokens)
+				subResult := r.ProcessLine(subTokens)
 				paren = false
 				if len(subResult) == 0 {
-					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+					fmt.Fprintln(os.Stderr, "SyntaxError: empty parenthesis")
 					return nil
 				}
 
@@ -344,7 +436,10 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				}
 			}
 
-		case Period:
+		case tokens.LBracket:
+			bracket = 1
+
+		case tokens.Period:
 			if len(stack) > 0 {
 				result := stack[len(stack)-1]
 				results = append(results, result)
@@ -356,69 +451,72 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 			lastVar = ""
 			typeError = false
 			messageError = false
-			sign = false
+			minus = false
+			plus = false
 			assigment = false
 
-		case Assignment:
+		case tokens.Assignment:
 			if lastVar == "" {
 				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
 				return nil
 			}
 			assigment = true
 
-		case Colon:
+		case tokens.Colon:
 			lastMessage = binaryMessage
 
-		case Symbol, Character, String, Integer, Float, RadixNumber, True, False, Nil:
+		case tokens.Symbol, tokens.Character, tokens.String, tokens.Integer, tokens.Float,
+			tokens.RadixNumber, tokens.True, tokens.False, tokens.Nil:
+
 			var typeName string
 			var obj core.Object
 
 			switch tok.Type {
-			case Symbol:
-				if sign {
-					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+			case tokens.Symbol:
+				if minus {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Symbol")
 					return nil
 				}
 				typeName = "Symbol"
 				obj = types.NewSymbolObject(tok.Value).Object
 
-			case Character:
-				if sign {
-					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+			case tokens.Character:
+				if minus {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Character")
 					return nil
 				}
 				typeName = "Character"
 				val := tok.Value[1:]
 				obj = types.NewCharacterObject([]rune(val)[0]).Object
 
-			case String:
-				if sign {
-					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+			case tokens.String:
+				if minus {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for String")
 					return nil
 				}
 				typeName = "String"
-				val := tok.Value[1:len(tok.Value)-1]
+				val := tok.Value[1 : len(tok.Value)-1]
 				obj = types.NewStringObject(val).Object
 
-			case Integer:
+			case tokens.Integer:
 				typeName = "Integer"
 				value, _ := strconv.ParseInt(tok.Value, 10, 64)
-				if sign {
+				if minus {
 					value = -value
-					sign = false
+					minus = false
 				}
 				obj = types.NewIntegerObject(value).Object
 
-			case Float:
+			case tokens.Float:
 				typeName = "Float"
 				value, _ := strconv.ParseFloat(tok.Value, 64)
-				if sign {
+				if minus {
 					value = -value
-					sign = false
+					minus = false
 				}
 				obj = types.NewFloatObject(value).Object
 
-			case RadixNumber:
+			case tokens.RadixNumber:
 				typeName = "Integer"
 				parts := strings.Split(tok.Value, "r")
 				base, _ := strconv.ParseInt(parts[0], 10, 32)
@@ -431,31 +529,31 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 					fmt.Fprintln(os.Stderr, "SyntaxError: invalid number in base", base)
 					return nil
 				}
-				if sign {
+				if minus {
 					num = -num
-					sign = false
+					minus = false
 				}
 				obj = types.NewIntegerObject(num).Object
 
-			case True:
-				if sign {
-					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+			case tokens.True:
+				if minus {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Bool")
 					return nil
 				}
 				typeName = "Bool"
 				obj = types.NewBoolObject(true).Object
 
-			case False:
-				if sign {
-					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+			case tokens.False:
+				if minus {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Bool")
 					return nil
 				}
 				typeName = "Bool"
 				obj = types.NewBoolObject(false).Object
 
-			case Nil:
-				if sign {
-					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+			case tokens.Nil:
+				if minus {
+					fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for Nil")
 					return nil
 				}
 				typeName = "Nil"
@@ -484,8 +582,19 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				}
 				stack = append(stack, objResult)
 				lastMessage = nil
+			} else if fn, ok := lastMessage.(func(...core.Object) interface{}); ok {
+				result := fn(obj)
+				objResult, ok := result.(core.Object)
+				if !ok {
+					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, typeName))
+					stack = append(stack, err.Object)
+					continue
+				}
+				stack = append(stack, objResult)
+				lastMessage = nil
 			} else {
 				if binaryMessage != nil {
+					fmt.Println("FOUND!")
 					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
 					return nil
 				}
@@ -498,11 +607,11 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				}
 			}
 
-		case ByteArray, Array:
+		case tokens.ByteArray, tokens.Array:
 			var typeName string
 			var obj core.Object
 
-			if tok.Type == ByteArray {
+			if tok.Type == tokens.ByteArray {
 				typeName = "ByteArray"
 				elements, ok := parseByteArray(tok.Value, r, &stack)
 				if !ok {
@@ -542,7 +651,7 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				}
 			}
 
-		case Identifier:
+		case tokens.Identifier:
 			obj, inScope := r.globalScope[tok.Value]
 
 			if lastMessage != nil {
@@ -567,12 +676,10 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 			} else if inScope && binaryMessage != nil {
 				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
 				return nil
-			}
-
-			if len(stack) == 0 {
+			} else if len(stack) == 0 {
 				if inScope {
-					if sign {
-						fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+					if minus {
+						fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for variables")
 						return nil
 					}
 					stack = append(stack, obj)
@@ -589,6 +696,24 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				}
 				if fn, ok := val.(func(core.Object) interface{}); ok {
 					binaryMessage = fn
+				} else if fnCodeBlock, ok := val.(func(...core.Object) interface{}); ok {
+					if noArgs, ok := last.Get("no_arguments"); ok {
+						if valInt, ok := noArgs.(int64); ok {
+							if valInt == 0 {
+								objResult, ok := fnCodeBlock().(core.Object)
+								if !ok{
+									Log("COMPILER ERROR!")
+									return nil
+								}
+								stack = append(stack, objResult)
+							} else {
+								binaryMessage = fnCodeBlock
+							}
+						}
+					} else {
+						Log("COMPILER ERROR!")
+						return nil
+					}
 				} else if obj, ok := val.(core.Object); ok {
 					stack = append(stack, obj)
 				} else {
@@ -602,18 +727,19 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				}
 			}
 
-		case Plus, Minus, Star, Slash, Ampersand, LessThan, GreaterThan, LessThanEqual, GreaterThanEqual, DoubleEquals:
-			opMethods := map[TokenType]string{
-				Plus:             "plus",
-				Minus:            "minus",
-				Star:             "mul",
-				Slash:            "div",
-				Ampersand:        "and",
-				LessThan:         "lt",
-				GreaterThan:      "gt",
-				LessThanEqual:    "le",
-				GreaterThanEqual: "ge",
-				DoubleEquals:     "eq",
+		case tokens.Plus, tokens.Minus, tokens.Star, tokens.Slash, tokens.Ampersand,
+			tokens.LessThan, tokens.GreaterThan, tokens.LessThanEqual, tokens.GreaterThanEqual, tokens.DoubleEquals:
+			opMethods := map[tokens.TokenType]string{
+				tokens.Plus:             "plus",
+				tokens.Minus:            "minus",
+				tokens.Star:             "mul",
+				tokens.Slash:            "div",
+				tokens.Ampersand:        "and",
+				tokens.LessThan:         "lt",
+				tokens.GreaterThan:      "gt",
+				tokens.LessThanEqual:    "le",
+				tokens.GreaterThanEqual: "ge",
+				tokens.DoubleEquals:     "eq",
 			}
 
 			if _, ok := r.globalScope[lastVar]; lastVar != "" && !ok {
@@ -621,19 +747,20 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 				lastVar = ""
 			}
 
-			if tok.Type == Plus || tok.Type == Minus {
-				if tok.Type == Plus {
+			if tok.Type == tokens.Plus || tok.Type == tokens.Minus {
+				if tok.Type == tokens.Plus {
+					plus = true
 					if len(stack) == 0 {
-						sign = false
+						minus = false
 						continue
 					}
 				} else {
 					if lastMessage != nil {
-						sign = !sign
+						minus = !minus
 						continue
 					}
 					if len(stack) == 0 {
-						sign = !sign
+						minus = !minus
 						continue
 					}
 				}
@@ -664,12 +791,26 @@ func (r *Repl) processLine(tokens []Token) []core.Object {
 	}
 
 	if _, ok := r.globalScope[lastVar]; lastVar != "" && !ok {
-		stack = append(stack, errors.NewNameError(fmt.Sprintf("'%s' is not defined", lastVar)).Object)
+		if len(stack) == 0 {
+			stack = append(stack, errors.NewNameError(fmt.Sprintf("'%s' is not defined", lastVar)).Object)
+		} else {
+			r.globalScope[lastVar] = stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+		}
+	}
+
+	if messageError {
+		err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s", lastType))
+		stack = append(stack, err.Object)
 	}
 
 	if len(stack) > 0 {
 		result := stack[len(stack)-1]
+		r.globalScope["_"] = result
 		results = append(results, result)
+	} else if minus || plus {
+		fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+		return nil
 	}
 	return results
 }
@@ -694,8 +835,8 @@ func (r *Repl) Start() {
 
 		r.liner.AppendHistory(input)
 
-		tokens := Lex(input)
-		outputs := r.processLine(tokens)
+		toks := tokens.Lex(input)
+		outputs := r.ProcessLine(toks)
 		for _, out := range outputs {
 			fmt.Println(out.String())
 		}

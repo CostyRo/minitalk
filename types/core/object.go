@@ -6,10 +6,10 @@ import (
 )
 
 type Object struct {
-	Self  interface{}
-	properties map[string]interface{}
-	propertyTypes  map[string]func(interface{}) *Object
-	Class      string
+	Self          interface{}
+	properties    map[string]interface{}
+	propertyTypes map[string]func(interface{}) *Object
+	Class         string
 }
 
 func NewObject(Self interface{}, Class string) *Object {
@@ -132,6 +132,47 @@ func (o *Object) String() string {
 			}
 			return "#(" + strings.Join(elems, " ") + ")"
 		}
+	case "CodeBlock":
+		argsStr := ""
+		if argsVal, ok := o.Get("arguments"); ok {
+			if argsObj, ok := argsVal.(Object); ok {
+				if argsArr, ok := argsObj.Self.([]Object); ok {
+					argsParts := make([]string, len(argsArr))
+					for i, argObj := range argsArr {
+						argsParts[i] = argObj.String()
+					}
+					argsStr = strings.Join(argsParts, " ")
+				}
+			}
+		}
+
+		locStr := ""
+		if locVal, ok := o.Get("loc"); ok {
+			if locObj, ok := locVal.(Object); ok {
+				if locArr, ok := locObj.Self.([]Object); ok {
+					for i, lineObj := range locArr {
+						lineNum := i + 1
+						locStr += fmt.Sprintf("\n%d: ", lineNum)
+
+						if lineElems, ok := lineObj.Self.([]Object); ok {
+							elemStrs := make([]string, len(lineElems))
+							for j, elemObj := range lineElems {
+								if elemArr, ok := elemObj.Self.([]Object); ok && len(elemArr) == 2 {
+									classStr := elemArr[0].String()
+									valueStr := elemArr[1].String()
+									elemStrs[j] = fmt.Sprintf("{%s %s}", classStr, valueStr)
+								} else {
+									elemStrs[j] = "{}"
+								}
+							}
+							locStr += strings.Join(elemStrs, " ")
+						}
+					}
+				}
+			}
+		}
+
+		return argsStr + locStr
 	default:
 		if strings.HasSuffix(o.Class, "Error") {
 			if msg, ok := o.Self.(string); ok {

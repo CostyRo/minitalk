@@ -1,4 +1,4 @@
-package main
+package tokens
 
 import (
 	"regexp"
@@ -90,7 +90,7 @@ var tokenExprs = []tokenExpr{
 	{Colon, regexp.MustCompile(`^:`)},
 	{Pipe, regexp.MustCompile(`^\|`)},
 	{Caret, regexp.MustCompile(`^\^`)},
-	{Identifier, regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*`)},
+	{Identifier, regexp.MustCompile(`^[a-zA-Z_][_a-zA-Z0-9_]*`)},
 	{String, regexp.MustCompile(`^'([^']|'')*'`)},
 	{ByteArray, regexp.MustCompile(`^#\[[^\]]*\]`)},
 	{Comment, regexp.MustCompile(`^"[^"]*"`)},
@@ -103,9 +103,10 @@ func scanArray(input string) (string, int) {
 	}
 	level := 0
 	for i, ch := range input {
-		if ch == '(' {
+		switch ch {
+		case '(':
 			level++
-		} else if ch == ')' {
+		case ')':
 			level--
 			if level == 0 {
 				return input[:i+1], i + 1

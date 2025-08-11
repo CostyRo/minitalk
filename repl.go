@@ -461,6 +461,9 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				return nil
 			}
 			assigment = true
+			if len(stack) !=0 {
+				stack = stack[:len(stack)-1]
+			}
 
 		case tokens.Colon:
 			lastMessage = binaryMessage

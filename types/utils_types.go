@@ -3,6 +3,7 @@ package types
 import (
 	"minitalk/tokens"
 	"minitalk/types/core"
+	"minitalk/types/errors"
 )
 
 func ObjectConstructor(val interface{}) *core.Object {
@@ -17,6 +18,12 @@ func ObjectConstructor(val interface{}) *core.Object {
 		return &NewStringObject(v).Object
 	case rune:
 		return &NewCharacterObject(v).Object
+	case []byte:
+		return &NewByteArrayObject(v).Object
+	case []core.Object:
+		return &NewArrayObject(v).Object
+	case core.NotImplementedObject:
+		return &errors.NewNotImplementedError().Object
 	default:
 		return nil
 	}
@@ -27,6 +34,20 @@ func SymbolConstructor(val interface{}) *core.Object {
 		return &NewSymbolObject(s).Object
 	}
 	return nil
+}
+
+func convertToByteArray(arr []core.Object) ([]byte, bool) {
+	bytes := make([]byte, len(arr))
+	for i, el := range arr {
+		if b, ok := el.Self.(byte); ok {
+			bytes[i] = b
+		} else if i64, ok := el.Self.(int64); ok && i64 >= 0 && i64 <= 255 {
+			bytes[i] = byte(i64)
+		} else {
+			return nil, false
+		}
+	}
+	return bytes, true
 }
 
 func StringToTokenType(s string) tokens.TokenType {

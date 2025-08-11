@@ -36,5 +36,19 @@ func NewByteArrayObject(data []byte) *ByteArrayObject {
 		return nil
 	})
 
+	
+	obj.Set("toInteger", errors.NewTypeError("Invalid conversion to Integer").Object)
+	obj.Set("toFloat", errors.NewTypeError("Invalid conversion to Float").Object)
+	obj.Set("toBool", errors.NewTypeError("Invalid conversion to Bool").Object)
+	obj.Set("toSymbol", errors.NewTypeError("Invalid conversion to Symbol").Object)
+	obj.Set("toCharacter", errors.NewTypeError("Invalid conversion to Character").Object)
+	obj.Set("toString", errors.NewTypeError("Invalid conversion to String").Object)
+	obj.Set("toByteArray", data, ObjectConstructor)
+	elements := make([]core.Object, len(data))
+	for i, b := range data {
+		elements[i] = NewIntegerObject(int64(b)).Object
+	}
+	obj.Set("toArray", NewArrayObject(elements).Object)
+
 	return &ByteArrayObject{*obj}
 }

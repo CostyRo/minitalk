@@ -4,6 +4,7 @@ import (
 	"minitalk/interfaces"
 	"minitalk/tokens"
 	"minitalk/types/core"
+	"minitalk/types/errors"
 )
 
 type CodeBlockObject struct {
@@ -129,7 +130,14 @@ func NewCodeBlockObject(arguments []string, loc [][][]string,r interfaces.ReplIn
 
 		return core.Object{}
 	})
-
+	obj.Set("toInteger", errors.NewTypeError("Invalid conversion to CodeBlock").Object)
+	obj.Set("toFloat", errors.NewTypeError("Invalid conversion to CodeBlock").Object)
+	obj.Set("toBool", errors.NewTypeError("Invalid conversion to CodeBlock").Object)
+	obj.Set("toSymbol", errors.NewTypeError("Invalid conversion to CodeBlock").Object)
+	obj.Set("toCharacter", errors.NewTypeError("Invalid conversion to CodeBlock").Object)
+	obj.Set("toString", errors.NewTypeError("Invalid conversion to CodeBlock").Object)
+	obj.Set("toByteArray", errors.NewTypeError("Invalid conversion to CodeBlock").Object)
+	obj.Set("toArray", errors.NewTypeError("Invalid conversion to CodeBlock").Object)
 
 	return &CodeBlockObject{*obj}
 }

@@ -20,6 +20,14 @@ func NewObject(Self interface{}, Class string) *Object {
 		Class:         Class,
 	}
 	obj.Set("isNil", Self == nil)
+	obj.Set("toInteger", NotImplemented)
+	obj.Set("toFloat", NotImplemented)
+	obj.Set("toBool", NotImplemented)
+	obj.Set("toSymbol", NotImplemented)
+	obj.Set("toCharacter", NotImplemented)
+	obj.Set("toString", NotImplemented)
+	obj.Set("toByteArray", NotImplemented)
+	obj.Set("toArray", NotImplemented)
 	return obj
 }
 
@@ -72,9 +80,9 @@ func (o *Object) String() string {
 		if v, ok := o.Self.(string); ok {
 			trimmed := strings.Trim(v, "\"'")
 			if strings.ContainsAny(trimmed, " \t\n") {
-				return fmt.Sprintf("%s'", trimmed)
+				return fmt.Sprintf("#'%s'", trimmed)
 			}
-			return strings.ReplaceAll(trimmed, "'", "")
+			return fmt.Sprintf("#%s",strings.ReplaceAll(trimmed, "'", ""))
 		}
 	case "Character":
 		if v, ok := o.Self.(rune); ok {

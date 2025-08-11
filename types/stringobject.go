@@ -51,30 +51,30 @@ func NewStringObject(value string) *StringObject {
 		}
 		return NewBoolObject(value == other.Self.(string)).Object
 	})
-	if value, ok := obj.Self.(string); ok {
-		if iVal, err := strconv.ParseInt(value, 10, 64); err == nil {
-			obj.Set("toInteger", iVal, ObjectConstructor)
-		} else {
-			obj.Set("toInteger", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Integer", value)).Object)
-		}
-		if fVal, err := strconv.ParseFloat(value, 64); err == nil {
-			obj.Set("toFloat", fVal, ObjectConstructor)
-		} else {
-			obj.Set("toFloat", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Float", value)).Object)
-		}
-		if bVal, err := strconv.ParseBool(value); err == nil {
-			obj.Set("toBool", bVal, ObjectConstructor)
-		} else {
-			obj.Set("toBool", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Bool", value)).Object)
-		}
-		if len(value) == 1 {
-			obj.Set("toCharacter", rune(value[0]), ObjectConstructor)
-		} else {
-			obj.Set("toCharacter", errors.NewTypeError("Invalid conversion to Character").Object)
-		}
-		obj.Set("toString", value, ObjectConstructor)
-		obj.Set("toSymbol", fmt.Sprintf("#%s", value), SymbolConstructor)
+	if iVal, err := strconv.ParseInt(value, 10, 64); err == nil {
+		obj.Set("toInteger", iVal, ObjectConstructor)
+	} else {
+		obj.Set("toInteger", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Integer", value)).Object)
 	}
+	if fVal, err := strconv.ParseFloat(value, 64); err == nil {
+		obj.Set("toFloat", fVal, ObjectConstructor)
+	} else {
+		obj.Set("toFloat", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Float", value)).Object)
+	}
+	if bVal, err := strconv.ParseBool(value); err == nil {
+		obj.Set("toBool", bVal, ObjectConstructor)
+	} else {
+		obj.Set("toBool", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Bool", value)).Object)
+	}
+	if len(value) == 1 {
+		obj.Set("toCharacter", rune(value[0]), ObjectConstructor)
+	} else {
+		obj.Set("toCharacter", errors.NewTypeError("Invalid conversion to Character").Object)
+	}
+	obj.Set("toString", value, ObjectConstructor)
+	obj.Set("toSymbol", value, SymbolConstructor)
+	obj.Set("toByteArray", errors.NewTypeError("Invalid conversion to ByteArray").Object)
+	obj.Set("toArray", errors.NewTypeError("Invalid conversion to Array").Object)
 
 	return &StringObject{*obj}
 }

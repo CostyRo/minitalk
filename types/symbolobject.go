@@ -21,31 +21,32 @@ func NewSymbolObject(name string) *SymbolObject {
 		}
 		return NewBoolObject(obj.String() == other.String()).Object
 	})
-	if value, ok := obj.Self.(string); ok {
-		symbolBody := value[1:]
-		if len(symbolBody) >= 2 && symbolBody[0] == '\'' && symbolBody[len(symbolBody)-1] == '\'' {
-			symbolBody = symbolBody[1 : len(symbolBody)-1]
-		}
-		if iVal, err := strconv.ParseInt(symbolBody, 10, 64); err == nil {
-			obj.Set("toInteger", iVal, ObjectConstructor)
-			obj.Set("toFloat", float64(iVal), ObjectConstructor)
-		} else {
-			obj.Set("toInteger", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Integer", symbolBody)).Object)
-			obj.Set("toFloat", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Float", symbolBody)).Object)
-		}
-		if bVal, err := strconv.ParseBool(symbolBody); err == nil {
-			obj.Set("toBool", bVal, ObjectConstructor)
-		} else {
-			obj.Set("toBool", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Bool", symbolBody)).Object)
-		}
-		if len(symbolBody) == 1 {
-			obj.Set("toCharacter", rune(symbolBody[0]), ObjectConstructor)
-		} else {
-			obj.Set("toCharacter", errors.NewTypeError("Invalid conversion to Character").Object)
-		}
-		obj.Set("toString", symbolBody, ObjectConstructor)
-		obj.Set("toSymbol", value, SymbolConstructor)
+
+	if iVal, err := strconv.ParseInt(name, 10, 64); err == nil {
+		obj.Set("toInteger", iVal, ObjectConstructor)
+		obj.Set("toFloat", float64(iVal), ObjectConstructor)
+	} else {
+		obj.Set("toInteger", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Integer", name)).Object)
+		obj.Set("toFloat", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Float", name)).Object)
 	}
+	if bVal, err := strconv.ParseBool(name); err == nil {
+		obj.Set("toBool", bVal, ObjectConstructor)
+	} else {
+		obj.Set("toBool", errors.NewValueError(fmt.Sprintf("Cannot convert %s to Bool", name)).Object)
+	}
+	if len(name) == 1 {
+		obj.Set("toCharacter", rune(name[0]), ObjectConstructor)
+	} else {
+		obj.Set("toCharacter", errors.NewTypeError("Invalid conversion to Character").Object)
+	}
+	str := name
+	if len(name) >= 2 && name[0] == '\'' && name[len(name)-1] == '\'' {
+		str = name[1:len(name)-1]
+	}
+	obj.Set("toString", str, ObjectConstructor)
+	obj.Set("toSymbol", name, SymbolConstructor)
+	obj.Set("toByteArray", errors.NewTypeError("Invalid conversion to ByteArray").Object)
+	obj.Set("toArray", errors.NewTypeError("Invalid conversion to Array").Object)
 
 	return &SymbolObject{*obj}
 }

@@ -494,7 +494,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 					return nil
 				}
 				typeName = "Symbol"
-				obj = types.NewSymbolObject(tok.Value).Object
+				obj = types.NewSymbolObject(tok.Value[1:]).Object
 
 			case tokens.Character:
 				if minus {
@@ -726,7 +726,13 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 							stack = append(stack, *obj)
 						}
 					} else {
-						stack = append(stack, *types.ObjectConstructor(val))
+						res := types.ObjectConstructor(val)
+						if res.Class == "NotImplementedError" {
+							if _, ok := res.Self.(string); ok {
+								res.Self = fmt.Sprintf("%s not implemented for %s", tok.Value, lastType)
+							}
+						}
+						stack = append(stack, *res)
 					}
 				}
 			}

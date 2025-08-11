@@ -137,18 +137,18 @@ func NewIntegerObject(value int64) *IntegerObject {
 		}
 		return nil
 	})
-	if val, ok := obj.Self.(int64); ok {
-		obj.Set("toInteger", val, ObjectConstructor)
-		obj.Set("toFloat", float64(val), ObjectConstructor)
-		obj.Set("toBool", val != 0, ObjectConstructor)
-		obj.Set("toSymbol", fmt.Sprintf("#%d", val), SymbolConstructor)
-		if val < 0 || val > 0x10FFFF {
-			obj.Set("toCharacter", errors.NewValueError("Value is not in valid Unicode range 0..0x10FFFF").Object, nil)
-		} else {
-			obj.Set("toCharacter", rune(val), ObjectConstructor)
-		}
-		obj.Set("toString", fmt.Sprintf("%d", val), ObjectConstructor)
+	obj.Set("toInteger", value, ObjectConstructor)
+	obj.Set("toFloat", float64(value), ObjectConstructor)
+	obj.Set("toBool", value != 0, ObjectConstructor)
+	obj.Set("toSymbol", fmt.Sprintf("%d", value), SymbolConstructor)
+	if value < 0 || value > 0x10FFFF {
+		obj.Set("toCharacter", errors.NewValueError("Value is not in valid Unicode range 0..0x10FFFF").Object)
+	} else {
+		obj.Set("toCharacter", rune(value), ObjectConstructor)
 	}
+	obj.Set("toString", fmt.Sprintf("%d", value), ObjectConstructor)
+	obj.Set("toByteArray", errors.NewTypeError("Invalid conversion to ByteArray").Object)
+	obj.Set("toArray", errors.NewTypeError("Invalid conversion to Array").Object)
 
 	return &IntegerObject{*obj}
 }

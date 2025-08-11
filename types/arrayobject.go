@@ -35,6 +35,19 @@ func NewArrayObject(elements []core.Object) *ArrayObject {
 		}
 		return nil
 	})
+	obj.Set("toInteger", errors.NewTypeError("Invalid conversion to Integer").Object)
+	obj.Set("toFloat", errors.NewTypeError("Invalid conversion to Float").Object)
+	obj.Set("toBool", errors.NewTypeError("Invalid conversion to Bool").Object)
+	obj.Set("toSymbol", errors.NewTypeError("Invalid conversion to Symbol").Object)
+	obj.Set("toCharacter", errors.NewTypeError("Invalid conversion to Character").Object)
+	obj.Set("toString", errors.NewTypeError("Invalid conversion to String").Object)
+	bArr, ok := convertToByteArray(elements)
+	if ok {
+		obj.Set("toByteArray", bArr, ObjectConstructor)
+	} else {
+		obj.Set("toByteArray", errors.NewTypeError("Invalid conversion to ByteArray").Object)
+	}
+	obj.Set("toArray", elements, ObjectConstructor)
 
 	return &ArrayObject{*obj}
 }

@@ -23,7 +23,6 @@ func NewByteArrayObject(data []byte) *ByteArrayObject {
 		}
 		return nil
 	})
-
 	obj.Set("at", func(other core.Object) interface{} {
 		if other.Class == "Integer" {
 			if idx, ok := other.Self.(int64); ok {
@@ -35,8 +34,47 @@ func NewByteArrayObject(data []byte) *ByteArrayObject {
 		}
 		return nil
 	})
+	obj.Set("do", func(other core.Object) interface{} {
+		if other.Class != "CodeBlock" {
+			return nil
+		}
+		noArgsVal, ok := other.Get("no_arguments")
+		if !ok {
+			return errors.NewValueError("CodeBlock missing no_arguments attribute").Object
+		}
+		noArgs, ok := noArgsVal.(int64)
+		if !ok || (noArgs != 1 && noArgs != 2) {
+			return errors.NewValueError("CodeBlock must have 1 or 2 arguments").Object
+		}
 
-	
+		valFn, _ := other.Get("value")
+		callable, ok := valFn.(func(...core.Object) interface{})
+		if !ok {
+			return errors.NewValueError("Invalid code block value").Object
+		}
+
+		for i, b := range data {
+			if noArgs == 1 {
+				callable(NewIntegerObject(int64(b)).Object)
+			} else {
+				result := callable(NewIntegerObject(int64(i)).Object)
+				nextBlock, ok := result.(core.Object)
+				if !ok || nextBlock.Class != "CodeBlock" {
+					continue
+				}
+				valFn2, _ := nextBlock.Get("value")
+				callable2, ok := valFn2.(func(...core.Object) interface{})
+				if !ok {
+					continue
+				}
+				callable2(NewIntegerObject(int64(b)).Object)
+			}
+		}
+
+		returnObj := NewBoolObject(true).Object
+		returnObj.Set("!printable", false)
+		return returnObj
+	})
 	obj.Set("toInteger", errors.NewTypeError("Invalid conversion to Integer").Object)
 	obj.Set("toFloat", errors.NewTypeError("Invalid conversion to Float").Object)
 	obj.Set("toBool", errors.NewTypeError("Invalid conversion to Bool").Object)

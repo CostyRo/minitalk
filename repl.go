@@ -401,7 +401,13 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 						[]string{TokenTypeToString(tok.Type), tok.Value})
 				}
 			case tokens.Colon:
-				argumentCodeBlock = true
+				if pipe || nonPipe {
+					locCodeBlock[len(locCodeBlock)-1] = append(
+						locCodeBlock[len(locCodeBlock)-1],
+						[]string{TokenTypeToString(tok.Type), tok.Value})
+				} else {
+					argumentCodeBlock = true
+				}
 			case tokens.Identifier:
 				if pipe {
 					locCodeBlock[len(locCodeBlock)-1] = append(

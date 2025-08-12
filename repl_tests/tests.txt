@@ -299,3 +299,9 @@ Transcript show: 'a'; show: 'b',ab
 @ Stdin
 stdin nextLine,
 a,'a'
+
+@ For eachs
+#[1 2 3] do: [:a | Transcript show: (a toString)],123
+#[1 2 3] do: [:i :a | Transcript show: (i toString)],012
+#(1 2 3) do: [:a | Transcript show: (a toString)],123
+#(1 2 3) do: [:i :a | Transcript show: (i toString)],012

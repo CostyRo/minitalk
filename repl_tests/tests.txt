@@ -290,3 +290,8 @@ true ifTrue: [1],1
 true ifFalse: [1],nil
 false ifTrue: [1],nil
 false ifFalse: [1],1
+
+@ Transcript
+Transcript show: 'a',a
+Transcript show: nl,\n
+Transcript show: 'a'; show: 'b',ab

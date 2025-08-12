@@ -63,6 +63,12 @@ func (o *Object) PropertyNames() []string {
 }
 
 func (o *Object) String() string {
+	if printableAttr, ok := o.Get("!printable"); ok {
+        if boolVal, ok := printableAttr.(bool); ok && !boolVal {
+            return ""
+        }
+    }
+
 	switch o.Class {
 	case "Integer":
 		if v, ok := o.Self.(int64); ok {

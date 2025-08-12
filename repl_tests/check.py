@@ -9,7 +9,7 @@ def read_tests(filename):
             continue
         inp, out = line.split(",", 1)
         inp = inp.encode().decode("unicode_escape")
-        out_decoded = out.encode().decode("unicode_escape").strip()
+        out_decoded = out.encode().decode("unicode_escape")
         if out_decoded == "":
             outputs.append([])
         else:

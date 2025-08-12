@@ -8,6 +8,7 @@ import (
 
 	"github.com/peterh/liner"
 
+	"minitalk/classes"
 	"minitalk/tokens"
 	"minitalk/types"
 	"minitalk/types/core"
@@ -44,10 +45,15 @@ func (r *Repl) GetNames() []string {
 }
 
 func NewRepl() *Repl {
-	return &Repl{
+	r := &Repl{
 		globalScope: make(map[string]core.Object),
 		liner:       liner.NewLiner(),
 	}
+
+	r.globalScope["Transcript"] = *classes.NewTranscriptClass()
+	r.globalScope["nl"] = types.NewStringObject(`\n`).Object
+
+	return r
 }
 
 func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) {
@@ -309,6 +315,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 	var subTokens []tokens.Token
 	var rvalue []tokens.Token
 	var stack []core.Object
+	var lastMessenger core.Object
 	var argumentsCodeBlock []string
 	var lastType string
 	var lastMessage any
@@ -458,6 +465,13 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 
 		case tokens.LBracket:
 			bracket = 1
+
+		case tokens.Semicolon:
+			if lastMessenger.Self == nil {
+				fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
+				return nil
+			}
+			stack = []core.Object{lastMessenger}
 
 		case tokens.Period:
 			if len(stack) > 0 {
@@ -622,7 +636,6 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				lastMessage = nil
 			} else {
 				if binaryMessage != nil {
-					fmt.Println("FOUND!")
 					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
 					return nil
 				}
@@ -703,6 +716,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				lastVar = tok.Value
 			} else {
 				last := stack[len(stack)-1]
+				lastMessenger = last
 				stack = stack[:len(stack)-1]
 				lastType = last.Class
 				val, ok := last.Get(tok.Value)

@@ -1,6 +1,8 @@
 package classes
 
 import (
+	"bufio"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,6 +43,13 @@ func NewFileClass(path string) *core.Object {
 	obj.Set("isWritable", types.NewBoolObject(isWritable(p)).Object)
 	obj.Set("isExecutable", types.NewBoolObject(exists && info.Mode()&0111 != 0).Object)
 	obj.Set("isHidden", types.NewBoolObject(strings.HasPrefix(filepath.Base(p), ".")).Object)
+	obj.Set("contents", func() core.Object {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			return types.NewStringObject("").Object
+		}
+		return types.NewStringObject(string(data)).Object
+	})
     obj.Set("tell", types.NewIntegerObject(0).Object)
 	obj.Set("seek", func(arg core.Object) interface{} {
 		if arg.Class != "Integer" {
@@ -49,6 +58,78 @@ func NewFileClass(path string) *core.Object {
 		obj.Set("tell", arg)
 		return types.NewBoolObject(true).Object
 	})
+    obj.Set("nextLine", func() core.Object {
+        f, err := os.Open(p)
+        if err != nil {
+            return types.NewStringObject("").Object
+        }
+        defer f.Close()
+
+        var pos int64
+        tell, ok := obj.Get("tell")
+        if ok {
+            if tellObj, ok := tell.(core.Object); ok {
+                pos = tellObj.Self.(int64)
+            }
+        }
+
+        _, err = f.Seek(pos, io.SeekStart)
+        if err != nil {
+            return types.NewStringObject("").Object
+        }
+
+        reader := bufio.NewReader(f)
+        line, err := reader.ReadString('\n')
+        if err != nil && err != io.EOF {
+            return types.NewStringObject("").Object
+        }
+
+        pos += int64(len(line))
+        obj.Set("tell", types.NewIntegerObject(pos).Object)
+
+        return types.NewStringObject(strings.TrimRight(line, "\r\n")).Object
+    })
+    obj.Set("write", func(arg core.Object) interface{} {
+        if arg.Class != "String" {
+            return nil
+        }
+        content := arg.Self.(string)
+        err := os.WriteFile(p, []byte(content), 0644)
+        if err != nil {
+            return types.NewBoolObject(false).Object
+        }
+        info, err := os.Stat(p)
+        if err == nil {
+            obj.Set("size", types.NewIntegerObject(info.Size()).Object)
+            obj.Set("modificationTime", types.NewStringObject(info.ModTime().Format(time.RFC3339)).Object)
+        }
+        return types.NewBoolObject(true).Object
+    })
+
+    obj.Set("append", func(arg core.Object) interface{} {
+        if arg.Class != "String" {
+            return nil
+        }
+        content := arg.Self.(string)
+        f, err := os.OpenFile(p, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+        if err != nil {
+            return types.NewBoolObject(false).Object
+        }
+        defer f.Close()
+
+        _, err = f.WriteString(content)
+        if err != nil {
+            return types.NewBoolObject(false).Object
+        }
+
+        info, err := os.Stat(p)
+        if err == nil {
+            obj.Set("size", types.NewIntegerObject(info.Size()).Object)
+            obj.Set("modificationTime", types.NewStringObject(info.ModTime().Format(time.RFC3339)).Object)
+        }
+
+        return types.NewBoolObject(true).Object
+    })
 
 	return obj
 }

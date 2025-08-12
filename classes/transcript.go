@@ -15,7 +15,7 @@ func NewTranscriptClass() *core.Object {
 		if args.Class != "String" {
 			return nil
 		}
-        raw := args.Self.(string) 
+        raw := args.Self.(string)
         unescaped, err := strconv.Unquote(`"` + raw + `"`)
         if err != nil {
             unescaped = raw

@@ -8,6 +8,7 @@ import (
 
 	"github.com/peterh/liner"
 
+	"minitalk/global"
 	"minitalk/classes"
 	"minitalk/tokens"
 	"minitalk/types"
@@ -47,12 +48,13 @@ func (r *Repl) GetNames() []string {
 func NewRepl() *Repl {
 	r := &Repl{
 		globalScope: make(map[string]core.Object),
-		liner:       liner.NewLiner(),
+		liner:       global.Liner,
 	}
 
 	r.globalScope["Transcript"] = *classes.NewTranscriptClass()
+	r.globalScope["stdin"] = *classes.NewStdinClass()
 	r.globalScope["nl"] = types.NewStringObject(`\n`).Object
-
+	
 	return r
 }
 
@@ -724,7 +726,9 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 					messageError = true
 					continue
 				}
-				if fn, ok := val.(func(core.Object) interface{}); ok {
+				if zeroArgsFn, ok := val.(func() core.Object); ok{
+					stack = append(stack, zeroArgsFn())
+				} else if fn, ok := val.(func(core.Object) interface{}); ok {
 					binaryMessage = fn
 				} else if fnCodeBlock, ok := val.(func(...core.Object) interface{}); ok {
 					if noArgs, ok := last.Get("no_arguments"); ok {

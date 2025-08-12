@@ -295,3 +295,7 @@ false ifFalse: [1],1
 Transcript show: 'a',a
 Transcript show: nl,\n
 Transcript show: 'a'; show: 'b',ab
+
+@ Stdin
+stdin nextLine,
+a,'a'

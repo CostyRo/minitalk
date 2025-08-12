@@ -53,6 +53,7 @@ func NewRepl() *Repl {
 
 	r.globalScope["Transcript"] = *classes.NewTranscriptClass()
 	r.globalScope["stdin"] = *classes.NewStdinClass()
+	r.globalScope["FileSystem"] = *classes.NewFileSystemClass()
 	r.globalScope["nl"] = types.NewStringObject(`\n`).Object
 	
 	return r

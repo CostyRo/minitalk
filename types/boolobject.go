@@ -14,6 +14,9 @@ type BoolObject struct {
 func NewBoolObject(value bool) *BoolObject {
 	obj := core.NewObject(value, "Bool")
 
+	obj.SetOptional("ifTrue", "ifFalse", core.NewObject(nil, "Nil"))
+	obj.SetOptional("ifFalse", "ifTrue", core.NewObject(nil, "Nil"))
+
 	obj.Set("and", func(other core.Object) interface{} {
 		if other.Class != "Bool" {
 			return nil
@@ -44,7 +47,11 @@ func NewBoolObject(value bool) *BoolObject {
 			return errors.NewValueError("CodeBlock must have no arguments").Object
 		}
 		if !value {
-			return core.Object{}
+			other_, ok := obj.GetOptional("ifTrue","ifFalse")
+			other = *other_
+			if !ok || other.Class != "CodeBlock" {
+				return core.Object{}
+			}
 		}
 		valFn, _ := other.Get("value")
 		result := valFn.(func(...core.Object) interface{})()
@@ -56,10 +63,15 @@ func NewBoolObject(value bool) *BoolObject {
 		}
 		noArgsVal, _ := other.Get("no_arguments")
 		if noArgsVal.(int64) != 0 {
+
 			return errors.NewValueError("CodeBlock must have no arguments").Object
 		}
 		if value {
-			return core.Object{}
+			other_, ok := obj.GetOptional("ifFalse","ifTrue")
+			other = *other_
+			if !ok || other.Class != "CodeBlock" {
+				return core.Object{}
+			}
 		}
 		valFn, _ := other.Get("value")
 		result := valFn.(func(...core.Object) interface{})()

@@ -14,6 +14,8 @@ type IntegerObject struct {
 func NewIntegerObject(value int64) *IntegerObject {
 	obj := core.NewObject(value, "Integer")
 
+	obj.SetOptional("to", "step", core.NewObject(nil, "Nil"))
+
 	obj.Set("plus", func(other core.Object) interface{} {
 		switch other.Class {
 		case "Integer":
@@ -136,6 +138,45 @@ func NewIntegerObject(value int64) *IntegerObject {
 			}
 		}
 		return nil
+	})
+	obj.Set("mod", func(other core.Object) interface{} {
+		if other.Class == "Integer" {
+			if val, ok := other.Self.(int64); ok {
+				if val == 0 {
+					return errors.NewZeroDivisionError().Object
+				}
+				return NewIntegerObject(value % val).Object
+			}
+		}
+		return nil
+	})
+	obj.Set("to", func(other core.Object) interface{} {
+		if other.Class != "Integer" {
+			return nil
+		}
+		end, _ := other.Self.(int64)
+		start := value
+		step := int64(1)
+
+		if stepObj, ok := obj.GetOptional("to", "step"); ok {
+			if stepObj.Class != "Integer" {
+				step = 1
+			} else {
+				step, _ = stepObj.Self.(int64)
+			}
+			if step == 0 {
+				return errors.NewValueError("Step cannot be zero").Object
+			}
+		}
+
+		var elements []core.Object
+		if (step > 0 && start <= end) || (step < 0 && start >= end) {
+			for i := start; (step > 0 && i <= end) || (step < 0 && i >= end); i += step {
+				elements = append(elements, NewIntegerObject(i).Object)
+			}
+		}
+
+		return NewArrayObject(elements).Object
 	})
 	obj.Set("toInteger", value, ObjectConstructor)
 	obj.Set("toFloat", float64(value), ObjectConstructor)

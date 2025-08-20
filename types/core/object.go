@@ -6,26 +6,28 @@ import (
 )
 
 type Object struct {
-	Self          interface{}
-	properties    map[string]interface{}
-	propertyTypes map[string]func(interface{}) *Object
-	Class         string
+	Self               interface{}
+	properties         map[string]interface{}
+	propertyTypes      map[string]func(interface{}) *Object
+	optionalProperties map[string]map[string]*Object
+	Class              string
 }
 
 func NewObject(Self interface{}, Class string) *Object {
 	obj := &Object{
-		Self:          Self,
-		properties:    make(map[string]interface{}),
-		propertyTypes: make(map[string]func(interface{}) *Object),
-		Class:         Class,
+		Self:               Self,
+		properties:         make(map[string]interface{}),
+		propertyTypes:      make(map[string]func(interface{}) *Object),
+		optionalProperties: make(map[string]map[string]*Object),
+		Class:              Class,
 	}
 	obj.Set("isNil", Self == nil)
-	obj.Set("onError", func(other Object) interface{} {return 0})
-	obj.Set("onNameError", func(other Object) interface{} {return 0})
-	obj.Set("onNotImplementedError", func(other Object) interface{} {return 0})
-	obj.Set("onTypeError", func(other Object) interface{} {return 0})
-	obj.Set("onValueError", func(other Object) interface{} {return 0})
-	obj.Set("onZeroDivisionError", func(other Object) interface{} {return 0})
+	obj.Set("onError", func(other Object) interface{} { return 0 })
+	obj.Set("onNameError", func(other Object) interface{} { return 0 })
+	obj.Set("onNotImplementedError", func(other Object) interface{} { return 0 })
+	obj.Set("onTypeError", func(other Object) interface{} { return 0 })
+	obj.Set("onValueError", func(other Object) interface{} { return 0 })
+	obj.Set("onZeroDivisionError", func(other Object) interface{} { return 0 })
 	obj.Set("toInteger", NotImplemented)
 	obj.Set("toFloat", NotImplemented)
 	obj.Set("toBool", NotImplemented)
@@ -54,6 +56,46 @@ func (o *Object) GetPropertyType(key string) func(interface{}) *Object {
 		return constructor
 	}
 	return nil
+}
+
+func (o *Object) SetOptional(mainKey, subKey string, obj *Object) {
+	if o.optionalProperties == nil {
+		o.optionalProperties = make(map[string]map[string]*Object)
+	}
+	if o.optionalProperties[mainKey] == nil {
+		o.optionalProperties[mainKey] = make(map[string]*Object)
+	}
+	o.optionalProperties[mainKey][subKey] = obj
+}
+
+func (o *Object) GetOptional(mainKey, subKey string) (*Object, bool) {
+	if o.optionalProperties == nil {
+		return nil, false
+	}
+	if subMap, ok := o.optionalProperties[mainKey]; ok {
+		obj, exists := subMap[subKey]
+		return obj, exists
+	}
+	return nil, false
+}
+
+func (o *Object) HasOptional(mainKey string) bool {
+	if o.optionalProperties == nil {
+		return false
+	}
+	subMap, ok := o.optionalProperties[mainKey]
+	return ok && len(subMap) > 0
+}
+
+func (o *Object) HasOptionalKeyword(mainKey, subKey string) bool {
+	if o.optionalProperties == nil {
+		return false
+	}
+	if subMap, ok := o.optionalProperties[mainKey]; ok {
+		_, exists := subMap[subKey]
+		return exists
+	}
+	return false
 }
 
 func (o *Object) PropertiesLen() int {

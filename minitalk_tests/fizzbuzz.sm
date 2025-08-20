@@ -1,0 +1,18 @@
+fizz:=1to:100
+fizz do: [
+  :x | 
+  Transcript show: (
+    x mod: 15 == 0
+      ifTrue: ['FizzBuzz']
+      ifFalse: [
+        x mod: 5 == 0
+          ifTrue: ['Buzz']
+          ifFalse: [
+            x mod: 3 == 0
+              ifTrue: ['Fizz']
+              ifFalse: [x toString]
+          ]
+      ]
+  ).
+  Transcript show: nl
+]

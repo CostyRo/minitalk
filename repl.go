@@ -291,7 +291,6 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 			if ok {
 				obj = types.NewArrayObject(nested).Object
 			} else {
-				fmt.Println("A")
 				err = fmt.Errorf("invalid array literal: %s", t.Value)
 			}
 
@@ -314,7 +313,7 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 
 func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 	var results []core.Object
-
+	var keywordMessage core.KeywordMessage
 	var subTokens []tokens.Token
 	var rvalue []tokens.Token
 	var stack []core.Object
@@ -335,6 +334,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 	argumentCodeBlock := false
 	pipe := false
 	nonPipe := false
+	toSetProperty := ""
 
 	if len(toks) == 1 && toks[0].Type == tokens.RParen {
 		return nil
@@ -393,9 +393,9 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 
 		if bracket != 0 {
 			switch tok.Type {
-			case tokens.LBracket:
+				case tokens.LBracket:
 				bracket++
-				if pipe {
+				if pipe || nonPipe {
 					locCodeBlock[len(locCodeBlock)-1] = append(
 						locCodeBlock[len(locCodeBlock)-1],
 						[]string{TokenTypeToString(tok.Type), tok.Value})
@@ -404,8 +404,15 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				bracket--
 				if bracket == 0 {
 					pipe = false
+					nonPipe = false
 					obj := types.NewCodeBlockObject(argumentsCodeBlock, locCodeBlock, r).Object
-					if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+					if toSetProperty != "" {
+						if keywordMessage.Obj.HasOptionalKeyword(keywordMessage.Message, toSetProperty) {
+							keywordMessage.SetOptional(toSetProperty, &obj)
+						}
+					} else if keywordMessage.IsInitialized() {
+						keywordMessage.Parameter = &obj
+					} else if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
 						result := fn(obj)
 						objResult, ok := result.(core.Object)
 						if !ok {
@@ -423,7 +430,8 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 					} else {
 						stack = append(stack, obj)
 					}
-				} else if pipe {
+					locCodeBlock = [][][]string{{}}
+				} else if pipe || nonPipe {
 					locCodeBlock[len(locCodeBlock)-1] = append(
 						locCodeBlock[len(locCodeBlock)-1],
 						[]string{TokenTypeToString(tok.Type), tok.Value})
@@ -444,6 +452,11 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				} else if argumentCodeBlock {
 					argumentsCodeBlock = append(argumentsCodeBlock, tok.Value)
 					argumentCodeBlock = false
+				} else {
+					nonPipe = true
+					locCodeBlock[len(locCodeBlock)-1] = append(
+						locCodeBlock[len(locCodeBlock)-1],
+						[]string{TokenTypeToString(tok.Type), tok.Value})
 				}
 			case tokens.Pipe:
 				pipe = true
@@ -463,6 +476,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 					locCodeBlock[len(locCodeBlock)-1],
 					[]string{TokenTypeToString(tok.Type), tok.Value})
 				nonPipe = true
+				argumentCodeBlock = false
 			}
 			continue
 		}
@@ -519,7 +533,9 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 			}
 
 		case tokens.Colon:
-			lastMessage = binaryMessage
+			if !keywordMessage.IsInitialized() {
+				lastMessage = binaryMessage
+			}
 
 		case tokens.Symbol, tokens.Character, tokens.String, tokens.Integer, tokens.Float,
 			tokens.RadixNumber, tokens.True, tokens.False, tokens.Nil:
@@ -628,7 +644,13 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				continue
 			}
 
-			if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+			if toSetProperty != "" {
+				if keywordMessage.Obj.HasOptionalKeyword(keywordMessage.Message, toSetProperty) {
+					keywordMessage.SetOptional(toSetProperty, &obj)
+				}
+			} else if keywordMessage.IsInitialized() {
+				keywordMessage.Parameter = &obj
+			} else if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
 				result := fn(obj)
 				objResult, ok := result.(core.Object)
 				if !ok {
@@ -702,6 +724,27 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 		case tokens.Identifier:
 			obj, inScope := r.globalScope[tok.Value]
 
+			if keywordMessage.IsInitialized() {
+				if keywordMessage.Obj.HasOptionalKeyword(keywordMessage.Message, tok.Value) {
+					toSetProperty = tok.Value
+					continue
+				} else {
+					keywordMessage.ApplyToObject()
+					obj := keywordMessage.Obj
+					val, ok := obj.Get(keywordMessage.Message)
+					if !ok {
+						messageError = true
+					}
+					if fn, ok := val.(func(core.Object) interface{}); ok {
+						obj, ok := fn(*keywordMessage.Parameter).(core.Object)
+						if ok {
+							stack = append(stack, obj)
+						}
+					}
+					keywordMessage.Reset()
+					toSetProperty = ""
+				}
+			}
 			if lastMessage != nil {
 				if inScope {
 					if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
@@ -746,7 +789,11 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				if zeroArgsFn, ok := val.(func() core.Object); ok{
 					stack = append(stack, zeroArgsFn())
 				} else if fn, ok := val.(func(core.Object) interface{}); ok {
-					binaryMessage = fn
+					if last.HasOptional(tok.Value) {
+						keywordMessage = *core.NewKeywordMessage(&last, tok.Value)
+					} else {
+						binaryMessage = fn
+					}
 				} else if fnCodeBlock, ok := val.(func(...core.Object) interface{}); ok {
 					if noArgs, ok := last.Get("no_arguments"); ok {
 						if valInt, ok := noArgs.(int64); ok {
@@ -807,7 +854,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 			if tok.Type == tokens.Plus || tok.Type == tokens.Minus {
 				if tok.Type == tokens.Plus {
 					plus = true
-					if len(stack) == 0 {
+					if len(stack) == 0 || toSetProperty != "" {
 						minus = false
 						continue
 					}
@@ -816,7 +863,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 						minus = !minus
 						continue
 					}
-					if len(stack) == 0 {
+					if len(stack) == 0 || toSetProperty != "" {
 						minus = !minus
 						continue
 					}
@@ -826,6 +873,23 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 					fmt.Fprintln(os.Stderr, "SyntaxError: invalid syntax")
 					return nil
 				}
+			}
+
+			if keywordMessage.IsInitialized() {
+				keywordMessage.ApplyToObject()
+				obj := keywordMessage.Obj
+				val, ok := obj.Get(keywordMessage.Message)
+				if !ok {
+					messageError = true
+				}
+				if fn, ok := val.(func(core.Object) interface{}); ok {
+					obj, ok := fn(*keywordMessage.Parameter).(core.Object)
+					if ok {
+						stack = append(stack, obj)
+					}
+				}
+				keywordMessage.Reset()
+				toSetProperty = ""
 			}
 
 			last := stack[len(stack)-1]
@@ -856,6 +920,21 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 		obj := subResult[len(subResult)-1]
 		results = append(results, obj)
 		r.globalScope[lastVar] = obj
+	}
+
+	if keywordMessage.IsInitialized() {
+		keywordMessage.ApplyToObject()
+		obj := keywordMessage.Obj
+		val, ok := obj.Get(keywordMessage.Message)
+		if !ok {
+			messageError = true
+		}
+		if fn, ok := val.(func(core.Object) interface{}); ok {
+			obj, ok := fn(*keywordMessage.Parameter).(core.Object)
+			if ok {
+				stack = append(stack, obj)
+			}
+		}
 	}
 
 	if messageError {

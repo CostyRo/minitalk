@@ -1,6 +1,6 @@
-a:=#(1 2 3 4 5)
+a:=#(0 1 2 3 4 5)
 a do: [
   :x | 
-  Transcript show: (x*2 toString).
+  Transcript show: ((10/x onZeroDivisionError: [0]) toString).
   Transcript show: nl
 ]

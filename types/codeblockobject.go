@@ -36,7 +36,6 @@ func NewCodeBlockObject(arguments []string, loc [][][]string,r interfaces.ReplIn
 	}
 	locArrayObj := NewArrayObject(locList)
 	obj.Set("loc", locArrayObj.Object)
-
 	obj.Set("value", func(args ...core.Object) interface{} {
 		locVal, ok := obj.Get("loc")
 		if !ok {

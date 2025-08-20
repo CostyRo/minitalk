@@ -307,7 +307,7 @@ a,'a'
 #(1 2 3) do: [:i :a | Transcript show: (i toString)],012
 #(1 2 3 4) do: [:i :x | Transcript show: ((x+i) toString)],1357
 
-# Multi-line
+@ Multi-line
 (1+,2
 1),
 (1+,2
@@ -319,3 +319,10 @@ a,'a'
 x+1] value: 1,
 #[,#[]
 ],
+
+# Error Handling
+nil onError: 1,nil
+1/1 onError: [0],1
+1/0 onError: [0],0
+1/0 onZeroDivisionError: [0],0
+1/0 onTypeError: [0],TypeError: Message doesn't exists for ZeroDivisionError

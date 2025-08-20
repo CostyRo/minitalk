@@ -8,8 +8,8 @@ import (
 
 	"github.com/peterh/liner"
 
-	"minitalk/global"
 	"minitalk/classes"
+	"minitalk/global"
 	"minitalk/tokens"
 	"minitalk/types"
 	"minitalk/types/core"
@@ -409,9 +409,14 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 						result := fn(obj)
 						objResult, ok := result.(core.Object)
 						if !ok {
-							err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and CodeBlock", lastType))
-							stack = append(stack, err.Object)
-							continue
+							if result != 0 {
+								err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and CodeBlock", lastType))
+								stack = append(stack, err.Object)
+								continue
+							} else {
+								obj := lastMessenger
+								objResult = obj
+							}
 						}
 						stack = append(stack, objResult)
 						lastMessage = nil
@@ -627,9 +632,14 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				result := fn(obj)
 				objResult, ok := result.(core.Object)
 				if !ok {
-					err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, typeName))
-					stack = append(stack, err.Object)
-					continue
+					if result != 0 {
+						err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, typeName))
+						stack = append(stack, err.Object)
+						continue
+					} else {
+						obj := lastMessenger
+						objResult = obj
+					}
 				}
 				stack = append(stack, objResult)
 				lastMessage = nil

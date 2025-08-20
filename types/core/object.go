@@ -20,6 +20,12 @@ func NewObject(Self interface{}, Class string) *Object {
 		Class:         Class,
 	}
 	obj.Set("isNil", Self == nil)
+	obj.Set("onError", func(other Object) interface{} {return 0})
+	obj.Set("onNameError", func(other Object) interface{} {return 0})
+	obj.Set("onNotImplementedError", func(other Object) interface{} {return 0})
+	obj.Set("onTypeError", func(other Object) interface{} {return 0})
+	obj.Set("onValueError", func(other Object) interface{} {return 0})
+	obj.Set("onZeroDivisionError", func(other Object) interface{} {return 0})
 	obj.Set("toInteger", NotImplemented)
 	obj.Set("toFloat", NotImplemented)
 	obj.Set("toBool", NotImplemented)

@@ -330,7 +330,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 	messageError := false
 	minus := false
 	plus := false
-	paren := false
+	parenDepth := 0
 	bracket := 0
 	argumentCodeBlock := false
 	pipe := false
@@ -353,19 +353,42 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 			}
 		}
 
-		if paren {
-			subTokens = append(subTokens, tok)
+		if parenDepth > 0 {
 			switch tok.Type {
-			case tokens.RParen:
-				if !paren {
-					subTokens = subTokens[:len(subTokens)-1]
-				}
 			case tokens.LParen:
-				paren = true
-				continue
+				parenDepth++
+				subTokens = append(subTokens, tok)
+			case tokens.RParen:
+				if parenDepth == 1 {
+					subResult := r.ProcessLine(subTokens)
+					parenDepth = 0
+					subTokens = nil
+					if len(subResult) == 0 {
+						fmt.Fprintln(os.Stderr, "SyntaxError: empty parenthesis")
+						return nil
+					}
+					obj := subResult[len(subResult)-1]
+					if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
+						result := fn(obj)
+						objResult, ok := result.(core.Object)
+						if !ok {
+							err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, obj.Class))
+							stack = append(stack, err.Object)
+							continue
+						}
+						stack = append(stack, objResult)
+						lastMessage = nil
+					} else {
+						stack = append(stack, obj)
+					}
+				} else {
+					parenDepth--
+					subTokens = append(subTokens, tok)
+				}
 			default:
-				continue
+				subTokens = append(subTokens, tok)
 			}
+			continue
 		}
 
 		if bracket != 0 {
@@ -445,32 +468,9 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 			return nil
 
 		case tokens.LParen:
-			paren = true
-
-		case tokens.RParen:
-			if paren {
-				subResult := r.ProcessLine(subTokens)
-				paren = false
-				if len(subResult) == 0 {
-					fmt.Fprintln(os.Stderr, "SyntaxError: empty parenthesis")
-					return nil
-				}
-
-				obj := subResult[len(subResult)-1]
-				if fn, ok := lastMessage.(func(core.Object) interface{}); ok {
-					result := fn(obj)
-					objResult, ok := result.(core.Object)
-					if !ok {
-						err := errors.NewTypeError(fmt.Sprintf("Message doesn't exists for %s and %s", lastType, obj.Class))
-						stack = append(stack, err.Object)
-						continue
-					}
-					stack = append(stack, objResult)
-					lastMessage = nil
-				} else {
-					stack = append(stack, obj)
-				}
-			}
+			parenDepth = 1
+			subTokens = nil
+			continue
 
 		case tokens.LBracket:
 			bracket = 1
@@ -866,9 +866,10 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 
 func (r *Repl) Start() {
 	defer r.liner.Close()
-
 	r.liner.SetCtrlCAborts(true)
 	r.liner.SetMultiLineMode(false)
+
+	handler := NewInputHandler()
 
 	for {
 		line, err := r.liner.Prompt(">>> ")
@@ -877,13 +878,17 @@ func (r *Repl) Start() {
 			break
 		}
 
-		input := strings.TrimSpace(line)
-		if input == "exit" {
+		if strings.TrimSpace(line) == "exit" {
+			break
+		}
+
+		input, err := handler.Complete(line, r.liner.Prompt)
+		if err != nil {
+			fmt.Println()
 			break
 		}
 
 		r.liner.AppendHistory(input)
-
 		toks := tokens.Lex(input)
 		outputs := r.ProcessLine(toks)
 		for _, out := range outputs {

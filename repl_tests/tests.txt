@@ -305,3 +305,17 @@ a,'a'
 #[1 2 3] do: [:i :a | Transcript show: (i toString)],012
 #(1 2 3) do: [:a | Transcript show: (a toString)],123
 #(1 2 3) do: [:i :a | Transcript show: (i toString)],012
+#(1 2 3 4) do: [:i :x | Transcript show: ((x+i) toString)],1357
+
+# Multi-line
+(1+,2
+1),
+(1+,2
+,
+1),
+#(,#()
+),
+[ :x |,2
+x+1] value: 1,
+#[,#[]
+],

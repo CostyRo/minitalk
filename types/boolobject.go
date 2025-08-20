@@ -14,8 +14,8 @@ type BoolObject struct {
 func NewBoolObject(value bool) *BoolObject {
 	obj := core.NewObject(value, "Bool")
 
-	obj.SetOptional("ifTrue", "ifFalse", core.NewObject(nil, "Nil"))
-	obj.SetOptional("ifFalse", "ifTrue", core.NewObject(nil, "Nil"))
+	obj.SetOptional("ifTrue", "ifFalse", core.NewObject(nil, ""))
+	obj.SetOptional("ifFalse", "ifTrue", core.NewObject(nil, ""))
 
 	obj.Set("and", func(other core.Object) interface{} {
 		if other.Class != "Bool" {

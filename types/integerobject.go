@@ -14,7 +14,7 @@ type IntegerObject struct {
 func NewIntegerObject(value int64) *IntegerObject {
 	obj := core.NewObject(value, "Integer")
 
-	obj.SetOptional("to", "step", core.NewObject(nil, "Nil"))
+	obj.SetOptional("to", "step", core.NewObject(nil, ""))
 
 	obj.Set("plus", func(other core.Object) interface{} {
 		switch other.Class {

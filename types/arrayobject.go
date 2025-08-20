@@ -14,6 +14,8 @@ type ArrayObject struct {
 func NewArrayObject(elements []core.Object) *ArrayObject {
 	obj := core.NewObject(elements, "Array")
 
+	obj.SetOptional("at", "put", core.NewObject(nil, ""))
+
 	obj.Set("plus", func(other core.Object) interface{} {
 		if other.Class == "Array" {
 			if val, ok := other.Self.([]core.Object); ok {
@@ -23,17 +25,19 @@ func NewArrayObject(elements []core.Object) *ArrayObject {
 		}
 		return nil
 	})
-
 	obj.Set("at", func(other core.Object) interface{} {
-		if other.Class == "Integer" {
-			if idx, ok := other.Self.(int64); ok {
-				if idx < 0 || idx >= int64(len(elements)) {
-					return errors.NewValueError(fmt.Sprintf("Index %d out of range", idx)).Object
-				}
-				return elements[idx]
-			}
+		if other.Class != "Integer" {
+			return nil
 		}
-		return nil
+		idx, ok := other.Self.(int64)
+		if !ok || idx < 0 || idx >= int64(len(elements)) {
+			return errors.NewValueError(fmt.Sprintf("Index %d out of range", idx)).Object
+		}
+		putVal, _ := obj.GetOptional("at", "put")
+		if putVal.Class != "" {
+			elements[idx] = *putVal
+		}
+		return elements[idx]
 	})
 	obj.Set("do", func(other core.Object) interface{} {
 		if other.Class != "CodeBlock" {

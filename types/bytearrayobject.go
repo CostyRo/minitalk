@@ -14,6 +14,8 @@ type ByteArrayObject struct {
 func NewByteArrayObject(data []byte) *ByteArrayObject {
 	obj := core.NewObject(data, "ByteArray")
 
+	obj.SetOptional("at", "put", core.NewObject(nil, ""))
+
 	obj.Set("plus", func(other core.Object) interface{} {
 		if other.Class == "ByteArray" {
 			if val, ok := other.Self.([]byte); ok {
@@ -24,15 +26,27 @@ func NewByteArrayObject(data []byte) *ByteArrayObject {
 		return nil
 	})
 	obj.Set("at", func(other core.Object) interface{} {
-		if other.Class == "Integer" {
-			if idx, ok := other.Self.(int64); ok {
-				if idx < 0 || idx >= int64(len(data)) {
-					return errors.NewValueError(fmt.Sprintf("Index %d out of range", idx)).Object
-				}
-				return NewIntegerObject(int64(data[idx])).Object
-			}
+		if other.Class != "Integer" {
+			return nil
 		}
-		return nil
+		idx, ok := other.Self.(int64)
+		if !ok || idx < 0 || idx >= int64(len(data)) {
+			return errors.NewValueError(fmt.Sprintf("Index %d out of range", idx)).Object
+		}
+		putVal, _ := obj.GetOptional("at", "put")
+		if putVal.Class != "" {
+			if putVal.Class != "Integer" {
+				return errors.NewTypeError("ByteArray accepts only Integer values").Object
+			}
+			byteVal, ok := putVal.Self.(int64)
+			if !ok || byteVal < 0 || byteVal > 255 {
+				return errors.NewValueError(fmt.Sprintf("Invalid byte value: %v", putVal.Self)).Object
+			}
+			data[idx] = byte(byteVal)
+			return NewIntegerObject(byteVal).Object
+		}
+
+		return NewIntegerObject(int64(data[idx])).Object
 	})
 	obj.Set("do", func(other core.Object) interface{} {
 		if other.Class != "CodeBlock" {

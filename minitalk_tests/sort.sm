@@ -1,0 +1,16 @@
+array:=1to:5 reversed
+index:=0to:(array len - 1)
+index do: [
+  :i :x |
+  index do: [ 
+    :j :y |
+    x:=array at: i.
+    y:=array at: j.
+    (j > i) & (x > y) ifTrue: [
+        array at: i put: y.
+        array at: j put: x.
+    ]
+  ]
+]
+
+Transcript show: (array toString)

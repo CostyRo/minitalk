@@ -25,6 +25,16 @@ func NewArrayObject(elements []core.Object) *ArrayObject {
 		}
 		return nil
 	})
+	obj.Set("len", func() core.Object { return NewIntegerObject(int64(len(elements))).Object})
+	obj.Set("reversed", func() core.Object {
+		elements := obj.Self.([]core.Object)
+		n := len(elements)
+		newData := make([]core.Object, n)
+		for i, v := range elements {
+			newData[n-1-i] = v
+		}
+		return NewArrayObject(newData).Object
+	})
 	obj.Set("at", func(other core.Object) interface{} {
 		if other.Class != "Integer" {
 			return nil
@@ -93,7 +103,7 @@ func NewArrayObject(elements []core.Object) *ArrayObject {
 	obj.Set("toBool", errors.NewTypeError("Invalid conversion to Bool").Object)
 	obj.Set("toSymbol", errors.NewTypeError("Invalid conversion to Symbol").Object)
 	obj.Set("toCharacter", errors.NewTypeError("Invalid conversion to Character").Object)
-	obj.Set("toString", errors.NewTypeError("Invalid conversion to String").Object)
+	obj.Set("toString", func() core.Object { return NewStringObject(obj.String()).Object })
 	bArr, ok := convertToByteArray(elements)
 	if ok {
 		obj.Set("toByteArray", bArr, ObjectConstructor)

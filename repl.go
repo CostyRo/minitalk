@@ -55,12 +55,12 @@ func NewRepl() *Repl {
 	r.globalScope["stdin"] = *classes.NewStdinClass()
 	r.globalScope["FileSystem"] = *classes.NewFileSystemClass()
 	r.globalScope["nl"] = types.NewStringObject(`\n`).Object
-	
+
 	return r
 }
 
 func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) {
-	valStr := value[2:len(value)-1]
+	valStr := value[2 : len(value)-1]
 	innerTokens := tokens.Lex(valStr)
 
 	var elements []byte
@@ -109,7 +109,7 @@ func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) 
 			}
 
 		case tokens.String:
-			strVal := t.Value[1:len(t.Value)-1]
+			strVal := t.Value[1 : len(t.Value)-1]
 			intVal, err = strconv.ParseInt(strVal, 10, 64)
 			if err != nil {
 				err = fmt.Errorf("invalid literal: %s", t.Value)
@@ -165,7 +165,7 @@ func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) 
 }
 
 func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, bool) {
-	valStr := value[2:len(value)-1]
+	valStr := value[2 : len(value)-1]
 	innerTokens := tokens.Lex(valStr)
 
 	var elements []core.Object
@@ -229,7 +229,7 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 				fmt.Fprintln(os.Stderr, "SyntaxError: invalid unary minus for String")
 				return nil, false
 			}
-			obj = types.NewStringObject(t.Value[1:len(t.Value)-1]).Object
+			obj = types.NewStringObject(t.Value[1 : len(t.Value)-1]).Object
 
 		case tokens.Symbol:
 			if minus {
@@ -342,9 +342,6 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 
 	for _, tok := range toks {
 		plus = false
-		if tok.Type == tokens.Whitespace {
-			continue
-		}
 
 		if assigment {
 			if tok.Type != tokens.Period {
@@ -378,6 +375,12 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 						}
 						stack = append(stack, objResult)
 						lastMessage = nil
+					} else if toSetProperty != "" {
+						if keywordMessage.Obj.HasOptionalKeyword(keywordMessage.Message, toSetProperty) {
+							keywordMessage.SetOptional(toSetProperty, &obj)
+						}
+					} else if keywordMessage.IsInitialized() {
+						keywordMessage.Parameter = &obj
 					} else {
 						stack = append(stack, obj)
 					}
@@ -393,7 +396,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 
 		if bracket != 0 {
 			switch tok.Type {
-				case tokens.LBracket:
+			case tokens.LBracket:
 				bracket++
 				if pipe || nonPipe {
 					locCodeBlock[len(locCodeBlock)-1] = append(
@@ -459,14 +462,26 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 						[]string{TokenTypeToString(tok.Type), tok.Value})
 				}
 			case tokens.Pipe:
-				pipe = true
-				if nonPipe {
-					fmt.Fprintln(os.Stderr, "SyntaxError: invalid characters in arguments list of a code block")
-					return nil
+				if len(locCodeBlock[0]) > 0 {
+					locCodeBlock[len(locCodeBlock)-1] = append(
+						locCodeBlock[len(locCodeBlock)-1],
+						[]string{TokenTypeToString(tok.Type), tok.Value})
+				} else {
+					pipe = true
+					if nonPipe {
+						fmt.Fprintln(os.Stderr, "SyntaxError: invalid characters in arguments list of a code block")
+						return nil
+					}
 				}
 			case tokens.Period:
-				if pipe {
-					locCodeBlock = append(locCodeBlock, [][]string{})
+				if pipe || nonPipe {
+					if bracket == 1 {
+						locCodeBlock = append(locCodeBlock, [][]string{})
+					} else {
+						locCodeBlock[len(locCodeBlock)-1] = append(
+							locCodeBlock[len(locCodeBlock)-1],
+							[]string{TokenTypeToString(tok.Type), tok.Value})
+					}
 				} else {
 					fmt.Fprintln(os.Stderr, "SyntaxError: invalid characters in arguments list of a code block")
 					return nil
@@ -528,7 +543,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				return nil
 			}
 			assigment = true
-			if len(stack) !=0 {
+			if len(stack) != 0 {
 				stack = stack[:len(stack)-1]
 			}
 
@@ -723,9 +738,15 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 
 		case tokens.Identifier:
 			obj, inScope := r.globalScope[tok.Value]
-
 			if keywordMessage.IsInitialized() {
-				if keywordMessage.Obj.HasOptionalKeyword(keywordMessage.Message, tok.Value) {
+				if toSetProperty != "" {
+					if keywordMessage.Obj.HasOptionalKeyword(keywordMessage.Message, toSetProperty) {
+						keywordMessage.SetOptional(toSetProperty, &obj)
+					}
+					continue
+				} else if keywordMessage.Parameter == nil {
+					keywordMessage.Parameter = &obj
+				} else if keywordMessage.Obj.HasOptionalKeyword(keywordMessage.Message, tok.Value) {
 					toSetProperty = tok.Value
 					continue
 				} else {
@@ -786,7 +807,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 					messageError = true
 					continue
 				}
-				if zeroArgsFn, ok := val.(func() core.Object); ok{
+				if zeroArgsFn, ok := val.(func() core.Object); ok {
 					stack = append(stack, zeroArgsFn())
 				} else if fn, ok := val.(func(core.Object) interface{}); ok {
 					if last.HasOptional(tok.Value) {
@@ -799,7 +820,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 						if valInt, ok := noArgs.(int64); ok {
 							if valInt == 0 {
 								objResult, ok := fnCodeBlock().(core.Object)
-								if !ok{
+								if !ok {
 									Log("COMPILER ERROR!")
 									return nil
 								}
@@ -935,6 +956,7 @@ func (r *Repl) ProcessLine(toks []tokens.Token) []core.Object {
 				stack = append(stack, obj)
 			}
 		}
+		keywordMessage.Reset()
 	}
 
 	if messageError {
@@ -978,7 +1000,7 @@ func (r *Repl) Start() {
 		}
 
 		r.liner.AppendHistory(input)
-		toks := tokens.Lex(input)
+		toks := filterWhitespace(tokens.Lex(input))
 		outputs := r.ProcessLine(toks)
 		for _, out := range outputs {
 			fmt.Println(out.String())

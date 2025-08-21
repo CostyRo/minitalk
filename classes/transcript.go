@@ -2,7 +2,7 @@ package classes
 
 import (
 	"fmt"
-    "strconv"
+	"strconv"
 
 	"minitalk/types"
 	"minitalk/types/core"
@@ -15,14 +15,14 @@ func NewTranscriptClass() *core.Object {
 		if args.Class != "String" {
 			return nil
 		}
-        raw := args.Self.(string)
-        unescaped, err := strconv.Unquote(`"` + raw + `"`)
-        if err != nil {
-            unescaped = raw
-        }
+		raw := args.Self.(string)
+		unescaped, err := strconv.Unquote(`"` + raw + `"`)
+		if err != nil {
+			unescaped = raw
+		}
 		n, _ := fmt.Print(unescaped)
-        nBytes := types.NewIntegerObject(int64(n)).Object
-        nBytes.Set("!printable",false)
+		nBytes := types.NewIntegerObject(int64(n)).Object
+		nBytes.Set("!printable", false)
 		return nBytes
 	})
 

@@ -38,6 +38,13 @@ func (km *KeywordMessage) Reset() {
 	if km == nil {
 		return
 	}
+	if km.Obj != nil && km.Obj.optionalProperties != nil {
+		for mainKey, submap := range km.Obj.optionalProperties {
+			for subKey := range submap {
+				km.Obj.SetOptional(mainKey, subKey, NewObject(nil, ""))
+			}
+		}
+	}
 	km.Obj = nil
 	km.Message = ""
 	km.Parameter = nil
@@ -46,7 +53,6 @@ func (km *KeywordMessage) Reset() {
 			km.Optionals[k] = nil
 		}
 	}
-	km.Optionals = make(map[string]*Object)
 }
 
 func (km *KeywordMessage) String() string {

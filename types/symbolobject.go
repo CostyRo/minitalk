@@ -41,7 +41,7 @@ func NewSymbolObject(name string) *SymbolObject {
 	}
 	str := name
 	if len(name) >= 2 && name[0] == '\'' && name[len(name)-1] == '\'' {
-		str = name[1:len(name)-1]
+		str = name[1 : len(name)-1]
 	}
 	obj.Set("toString", str, ObjectConstructor)
 	obj.Set("toSymbol", name, SymbolConstructor)

@@ -30,7 +30,7 @@ func compileFile(filename string) {
 
 	repl := NewRepl()
 	handler := NewInputHandler()
-	lines := strings.Split(string(data), "\n")
+	lines := strings.Split(string(data), "\r\n")
 	feed := lineFeeder(lines)
 
 	for {
@@ -41,7 +41,6 @@ func compileFile(filename string) {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
-
 		input, err := handler.Complete(line, feed)
 		if err != nil {
 			if err != io.EOF {
@@ -49,8 +48,7 @@ func compileFile(filename string) {
 			}
 			break
 		}
-
-		toks := tokens.Lex(input)
+		toks := filterWhitespace(tokens.Lex(input))
 		repl.ProcessLine(toks)
 	}
 }

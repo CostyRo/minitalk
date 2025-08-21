@@ -11,7 +11,7 @@ type CodeBlockObject struct {
 	core.Object
 }
 
-func NewCodeBlockObject(arguments []string, loc [][][]string,r interfaces.ReplInterface) *CodeBlockObject {
+func NewCodeBlockObject(arguments []string, loc [][][]string, r interfaces.ReplInterface) *CodeBlockObject {
 	obj := core.NewObject(nil, "CodeBlock")
 
 	argsObjs := make([]core.Object, len(arguments))
@@ -112,14 +112,6 @@ func NewCodeBlockObject(arguments []string, loc [][][]string,r interfaces.ReplIn
 			results := r.ProcessLine(toks)
 			if len(results) > 0 {
 				lastResult = results[len(results)-1]
-			}
-		}
-
-		if len(argsSlice) == 1 {
-			for _, name := range r.GetNames() {
-				if len(name) > 0 && name[0] == ':' {
-					r.DeleteVar(name)
-				}
 			}
 		}
 

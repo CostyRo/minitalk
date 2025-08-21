@@ -47,7 +47,7 @@ func NewBoolObject(value bool) *BoolObject {
 			return errors.NewValueError("CodeBlock must have no arguments").Object
 		}
 		if !value {
-			other_, ok := obj.GetOptional("ifTrue","ifFalse")
+			other_, ok := obj.GetOptional("ifTrue", "ifFalse")
 			other = *other_
 			if !ok || other.Class != "CodeBlock" {
 				return core.Object{}
@@ -67,7 +67,7 @@ func NewBoolObject(value bool) *BoolObject {
 			return errors.NewValueError("CodeBlock must have no arguments").Object
 		}
 		if value {
-			other_, ok := obj.GetOptional("ifFalse","ifTrue")
+			other_, ok := obj.GetOptional("ifFalse", "ifTrue")
 			other = *other_
 			if !ok || other.Class != "CodeBlock" {
 				return core.Object{}

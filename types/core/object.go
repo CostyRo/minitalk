@@ -112,10 +112,10 @@ func (o *Object) PropertyNames() []string {
 
 func (o *Object) String() string {
 	if printableAttr, ok := o.Get("!printable"); ok {
-        if boolVal, ok := printableAttr.(bool); ok && !boolVal {
-            return ""
-        }
-    }
+		if boolVal, ok := printableAttr.(bool); ok && !boolVal {
+			return ""
+		}
+	}
 
 	switch o.Class {
 	case "Integer":
@@ -136,7 +136,7 @@ func (o *Object) String() string {
 			if strings.ContainsAny(trimmed, " \t\n") {
 				return fmt.Sprintf("#'%s'", trimmed)
 			}
-			return fmt.Sprintf("#%s",strings.ReplaceAll(trimmed, "'", ""))
+			return fmt.Sprintf("#%s", strings.ReplaceAll(trimmed, "'", ""))
 		}
 	case "Character":
 		if v, ok := o.Self.(rune); ok {

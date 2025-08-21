@@ -272,7 +272,7 @@ $a toArray,TypeError: Invalid conversion to Array
 #[1] toFloat,TypeError: Invalid conversion to Float
 #[1] toBool,TypeError: Invalid conversion to Bool
 #[1] toCharacter,TypeError: Invalid conversion to Character
-#[1] toString,TypeError: Invalid conversion to String
+#[1] toString,'#[1]'
 #[1] toSymbol,TypeError: Invalid conversion to Symbol
 
 @ Array conversions
@@ -283,7 +283,7 @@ $a toArray,TypeError: Invalid conversion to Array
 #(1) toFloat,TypeError: Invalid conversion to Float
 #(1) toBool,TypeError: Invalid conversion to Bool
 #(1) toCharacter,TypeError: Invalid conversion to Character
-#(1) toString,TypeError: Invalid conversion to String
+#(1) toString,'#(1)'
 #(1) toSymbol,TypeError: Invalid conversion to Symbol
 
 @ Not
@@ -341,7 +341,7 @@ nil onError: 1,nil
 1 to: 10 step: 2,#(1 3 5 7 9)
 10 to: 1 step: -4,#(10 6 2)
 
-@ at:
+@ At:
 #[1 2 3] at: 0,1
 #[1 2 3] at: 2,3
 #[1 2 3] at: 3,ValueError: Index 3 out of range
@@ -353,3 +353,13 @@ a,#[9 2 3]
 a:=#(1 2 3),#(1 2 3)
 a at: 0 put: 0,0
 a,#(0 2 3)
+
+@ Reversed
+1 to: 10 reversed,#(10 9 8 7 6 5 4 3 2 1)
+1 to: 10 toByteArray reversed,#[10 9 8 7 6 5 4 3 2 1]
+
+@ Len
+#[] len,0
+#[1 2 3] len,3
+#() len,0
+#(1 2 3) len,3

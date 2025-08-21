@@ -1,8 +1,8 @@
 package main
 
 import (
-    "fmt"
-    "runtime"
+	"fmt"
+	"runtime"
 
 	"minitalk/tokens"
 )
@@ -95,4 +95,14 @@ func TokenTypeToString(t tokens.TokenType) string {
 	default:
 		return "Unknown"
 	}
+}
+
+func filterWhitespace(toks []tokens.Token) []tokens.Token {
+	filtered := make([]tokens.Token, 0, len(toks))
+	for _, tok := range toks {
+		if tok.Type != tokens.Whitespace {
+			filtered = append(filtered, tok)
+		}
+	}
+	return filtered
 }

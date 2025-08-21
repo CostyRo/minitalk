@@ -15,7 +15,7 @@ type StringObject struct {
 func NewStringObject(value string) *StringObject {
 	obj := core.NewObject(value, "String")
 
-    obj.Set("plus", func(other core.Object) interface{} {
+	obj.Set("plus", func(other core.Object) interface{} {
 		if other.Class != "String" {
 			return nil
 		}

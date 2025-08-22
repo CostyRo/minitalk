@@ -1,5 +1,5 @@
 array:=1to:5 reversed
-index:=0to:(array len - 1)
+index:=0to:(array size - 1)
 index do: [
   :i :x |
   index do: [ 

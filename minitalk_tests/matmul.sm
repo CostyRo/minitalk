@@ -1,5 +1,5 @@
 lines:=FileSystem disk referenceTo: 'minitalk_tests/matmul.in' contents splitBy: ''
-index:=0to:(lines len - 1)
+index:=0to:(lines size - 1)
 isMat1:=true
 mat1:=#()
 mat2:=#()
@@ -10,9 +10,9 @@ index do: [
     isMat1:=false
   ].
   isMat1 ifTrue: [
-    mat1:=mat1 at: (mat1 len) insert: line
+    mat1:=mat1 at: (mat1 size) insert: line
   ] ifFalse: [
-    mat2:=mat2 at: (mat2 len) insert: line
+    mat2:=mat2 at: (mat2 size) insert: line
   ]
 ]
 

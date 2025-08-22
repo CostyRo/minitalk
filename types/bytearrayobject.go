@@ -26,7 +26,7 @@ func NewByteArrayObject(data []byte) *ByteArrayObject {
 		}
 		return nil
 	})
-	obj.Set("len", func() core.Object { return NewIntegerObject(int64(len(data))).Object })
+	obj.Set("size", func() core.Object { return NewIntegerObject(int64(len(data))).Object })
 	obj.Set("reversed", func() core.Object {
 		data := obj.Self.([]byte)
 		n := len(data)
@@ -35,6 +35,30 @@ func NewByteArrayObject(data []byte) *ByteArrayObject {
 			newData[n-1-i] = v
 		}
 		return NewByteArrayObject(newData).Object
+	})
+	obj.Set("removeAt", func(other core.Object) interface{} {
+		if other.Class != "Integer" {
+			return nil
+		}
+
+		idx, ok := other.Self.(int64)
+		data := obj.Self.([]byte)
+		if !ok || idx < 0 || idx >= int64(len(data)) {
+			return errors.NewValueError(fmt.Sprintf("Index %d out of range", idx)).Object
+		}
+
+		popped := data[idx]
+		rest := make([]*core.Object, 0, len(data)-1)
+		for i, b := range data {
+			if int64(i) != idx {
+				rest = append(rest, &NewIntegerObject(int64(b)).Object)
+			}
+		}
+
+		return NewArrayObject([]*core.Object{
+			&NewIntegerObject(int64(popped)).Object,
+			&NewArrayObject(rest).Object,
+		}).Object
 	})
 	obj.Set("at", func(other core.Object) interface{} {
 		if other.Class != "Integer" {

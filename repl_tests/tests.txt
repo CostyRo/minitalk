@@ -63,6 +63,7 @@ false+1,TypeError: Message doesn't exists for Bool and Integer
 +1+1,2
 'a'+'b','ab'
 #[1]+#[2],#[1 2]
+#(1)+#(2),#(1 2)
 
 @ Substraction
 1-1,0
@@ -351,15 +352,21 @@ nil onError: 1,nil
 #(1 2 3) at: 0 put: 0,#(0 2 3)
 #(1 2 3) at: 0 insert: 0,#(0 1 2 3)
 
+@ RemoveAt
+#[1 2 3] removeAt: 0,#(1 #(2 3))
+#[1 2 3] removeAt: 3,ValueError: Index 3 out of range
+#(1 2 3) removeAt: 0,#(1 #(2 3))
+#(1 2 3) removeAt: 3,ValueError: Index 3 out of range
+
 @ Reversed
 1 to: 10 reversed,#(10 9 8 7 6 5 4 3 2 1)
 1 to: 10 toByteArray reversed,#[10 9 8 7 6 5 4 3 2 1]
 
 @ Len
-#[] len,0
-#[1 2 3] len,3
-#() len,0
-#(1 2 3) len,3
+#[] size,0
+#[1 2 3] size,3
+#() size,0
+#(1 2 3) size,3
 
 @ SplitBy
 '' splitBy: ' ',#('')

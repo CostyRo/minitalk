@@ -16,6 +16,7 @@ func NewArrayObject(elements []*core.Object) *ArrayObject {
 
 	obj.SetOptional("at", "put", core.NewObject(nil, ""))
 	obj.SetOptional("at", "insert", core.NewObject(nil, ""))
+	obj.SetOptional("at", "pop", core.NewObject(nil, ""))
 
 	obj.Set("plus", func(other core.Object) interface{} {
 		if other.Class == "Array" {
@@ -26,7 +27,7 @@ func NewArrayObject(elements []*core.Object) *ArrayObject {
 		}
 		return nil
 	})
-	obj.Set("len", func() core.Object { return NewIntegerObject(int64(len(elements))).Object })
+	obj.Set("size", func() core.Object { return NewIntegerObject(int64(len(elements))).Object })
 	obj.Set("reversed", func() core.Object {
 		elements := obj.Self.([]*core.Object)
 		n := len(elements)
@@ -36,6 +37,24 @@ func NewArrayObject(elements []*core.Object) *ArrayObject {
 		}
 		return NewArrayObject(newData).Object
 	})
+	obj.Set("removeAt", func(other core.Object) interface{} {
+		if other.Class != "Integer" {
+			return nil
+		}
+
+		idx, ok := other.Self.(int64)
+		elements := obj.Self.([]*core.Object)
+		if !ok || idx < 0 || idx >= int64(len(elements)) {
+			return errors.NewValueError(fmt.Sprintf("Index %d out of range", idx)).Object
+		}
+
+		popped := elements[idx]
+		rest := make([]*core.Object, len(elements)-1)
+		copy(rest[:idx], elements[:idx])
+		copy(rest[idx:], elements[idx+1:])
+		obj.Self = rest
+		return NewArrayObject([]*core.Object{popped, &NewArrayObject(rest).Object}).Object
+	})
 	obj.Set("at", func(other core.Object) interface{} {
 		if other.Class != "Integer" {
 			return nil
@@ -43,6 +62,15 @@ func NewArrayObject(elements []*core.Object) *ArrayObject {
 		idx, ok := other.Self.(int64)
 		if !ok || idx < 0 || idx > int64(len(elements)) {
 			return errors.NewValueError(fmt.Sprintf("Index %d out of range", idx)).Object
+		}
+
+		popVal, _ := obj.GetOptional("at", "pop")
+		if popVal.Class != "" {
+			popped := elements[idx]
+			rest := make([]*core.Object, len(elements)-1)
+			copy(rest[:idx], elements[:idx])
+			copy(rest[idx:], elements[idx+1:])
+			return NewArrayObject([]*core.Object{popped, &NewArrayObject(rest).Object}).Object
 		}
 
 		insertVal, _ := obj.GetOptional("at", "insert")

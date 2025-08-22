@@ -20,7 +20,7 @@ func ObjectConstructor(val interface{}) *core.Object {
 		return &NewCharacterObject(v).Object
 	case []byte:
 		return &NewByteArrayObject(v).Object
-	case []core.Object:
+	case []*core.Object:
 		return &NewArrayObject(v).Object
 	case core.NotImplementedObject:
 		return &errors.NewNotImplementedError().Object
@@ -36,7 +36,7 @@ func SymbolConstructor(val interface{}) *core.Object {
 	return nil
 }
 
-func convertToByteArray(arr []core.Object) ([]byte, bool) {
+func convertToByteArray(arr []*core.Object) ([]byte, bool) {
 	bytes := make([]byte, len(arr))
 	for i, el := range arr {
 		if b, ok := el.Self.(byte); ok {

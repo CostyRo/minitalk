@@ -7,8 +7,8 @@ index do: [
     x:=array at: i.
     y:=array at: j.
     (j > i) & (x > y) ifTrue: [
-        array at: i put: y.
-        array at: j put: x.
+        array:=array at: i put: y.
+        array:=array at: j put: x.
     ]
   ]
 ]

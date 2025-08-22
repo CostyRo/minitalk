@@ -343,16 +343,13 @@ nil onError: 1,nil
 
 @ At:
 #[1 2 3] at: 0,1
-#[1 2 3] at: 2,3
 #[1 2 3] at: 3,ValueError: Index 3 out of range
-a:=#[1 2 3],#[1 2 3]
-a at: 0 put: 9,9
-a,#[9 2 3]
+#[1 2 3] at: 0 put: 0,#[0 2 3]
+#[1 2 3] at: 0 insert: 0,#[0 1 2 3]
 #(1 2 3) at: 0,1
 #(1 2 3) at: 3,ValueError: Index 3 out of range
-a:=#(1 2 3),#(1 2 3)
-a at: 0 put: 0,0
-a,#(0 2 3)
+#(1 2 3) at: 0 put: 0,#(0 2 3)
+#(1 2 3) at: 0 insert: 0,#(0 1 2 3)
 
 @ Reversed
 1 to: 10 reversed,#(10 9 8 7 6 5 4 3 2 1)
@@ -363,3 +360,13 @@ a,#(0 2 3)
 #[1 2 3] len,3
 #() len,0
 #(1 2 3) len,3
+
+@ SplitBy
+'' splitBy: ' ',#('')
+'1 2 3 4' splitBy: ' ',#('1' '2' '3' '4')
+
+@ Map
+#(1 2 3) map: [:x | x+1],#(2 3 4)
+#(1 2 3) map: [:i :x | x+i],#(1 3 5)
+#[1 2 3] map: [:x | x+1],#(2 3 4)
+#[1 2 3] map: [:i :x | x+i],#(1 3 5)

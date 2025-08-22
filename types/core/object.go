@@ -155,41 +155,13 @@ func (o *Object) String() string {
 			return "#[" + strings.Join(elems, " ") + "]"
 		}
 	case "Array":
-		switch arr := o.Self.(type) {
-		case []Object:
-			elems := make([]string, len(arr))
-			for i := range arr {
-				elems[i] = (&arr[i]).String()
-			}
-			return "#(" + strings.Join(elems, " ") + ")"
-		case []*Object:
+		if arr, ok := o.Self.([]*Object); ok {
 			elems := make([]string, len(arr))
 			for i, obj := range arr {
 				if obj == nil {
 					elems[i] = "nil"
 				} else {
 					elems[i] = obj.String()
-				}
-			}
-			return "#(" + strings.Join(elems, " ") + ")"
-		case []interface{}:
-			elems := make([]string, len(arr))
-			for i, v := range arr {
-				switch el := v.(type) {
-				case Object:
-					elems[i] = (&el).String()
-				case *Object:
-					if el == nil {
-						elems[i] = "nil"
-					} else {
-						elems[i] = el.String()
-					}
-				default:
-					if v == nil {
-						elems[i] = "nil"
-					} else {
-						elems[i] = fmt.Sprintf("%v", v)
-					}
 				}
 			}
 			return "#(" + strings.Join(elems, " ") + ")"

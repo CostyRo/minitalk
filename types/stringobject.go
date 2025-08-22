@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"minitalk/types/core"
 	"minitalk/types/errors"
@@ -50,6 +51,21 @@ func NewStringObject(value string) *StringObject {
 			return nil
 		}
 		return NewBoolObject(value == other.Self.(string)).Object
+	})
+	obj.Set("splitBy", func(other core.Object) interface{} {
+		if other.Class != "String" {
+			return nil
+		}
+		sep := other.Self.(string)
+		if sep == "" {
+			sep = "\n"
+		}
+		parts := strings.Split(value, sep)
+		arr := make([]*core.Object, len(parts))
+		for i, p := range parts {
+			arr[i] = &NewStringObject(strings.ReplaceAll(p, "\r", "")).Object
+		}
+		return NewArrayObject(arr).Object
 	})
 	if iVal, err := strconv.ParseInt(value, 10, 64); err == nil {
 		obj.Set("toInteger", iVal, ObjectConstructor)

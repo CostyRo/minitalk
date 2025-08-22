@@ -1,0 +1,20 @@
+lines:=FileSystem disk referenceTo: 'minitalk_tests/matmul.in' contents splitBy: ''
+index:=0to:(lines len - 1)
+isMat1:=true
+mat1:=#()
+mat2:=#()
+index do: [
+  :i |
+  line:=lines at: i.
+  line eq: '' ifTrue: [
+    isMat1:=false
+  ].
+  isMat1 ifTrue: [
+    mat1:=mat1 at: (mat1 len) insert: line
+  ] ifFalse: [
+    mat2:=mat2 at: (mat2 len) insert: line
+  ]
+]
+
+Transcript show: (mat1 toString)
+Transcript show: (mat2 toString)

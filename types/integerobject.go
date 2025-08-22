@@ -169,10 +169,10 @@ func NewIntegerObject(value int64) *IntegerObject {
 			}
 		}
 
-		var elements []core.Object
+		var elements []*core.Object
 		if (step > 0 && start <= end) || (step < 0 && start >= end) {
 			for i := start; (step > 0 && i <= end) || (step < 0 && i >= end); i += step {
-				elements = append(elements, NewIntegerObject(i).Object)
+				elements = append(elements, &NewIntegerObject(i).Object)
 			}
 		}
 

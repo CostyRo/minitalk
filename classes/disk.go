@@ -30,7 +30,7 @@ func NewDiskClass() *core.Object {
 		if rawPath == "." {
 			cwd, err := os.Getwd()
 			if err != nil {
-				return types.NewArrayObject([]core.Object{}).Object
+				return types.NewArrayObject([]*core.Object{}).Object
 			}
 			targetDir = cwd
 		} else {
@@ -39,12 +39,12 @@ func NewDiskClass() *core.Object {
 
 		entries, err := os.ReadDir(targetDir)
 		if err != nil {
-			return types.NewArrayObject([]core.Object{}).Object
+			return types.NewArrayObject([]*core.Object{}).Object
 		}
 
-		var arr []core.Object
+		var arr []*core.Object
 		for _, e := range entries {
-			arr = append(arr, types.NewStringObject(e.Name()).Object)
+			arr = append(arr, &types.NewStringObject(e.Name()).Object)
 		}
 		return types.NewArrayObject(arr).Object
 	})

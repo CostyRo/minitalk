@@ -164,11 +164,11 @@ func parseByteArray(value string, r *Repl, stack *[]core.Object) ([]byte, bool) 
 	return elements, valid
 }
 
-func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, bool) {
+func parseArray(value string, r *Repl, stack *[]core.Object) ([]*core.Object, bool) {
 	valStr := value[2 : len(value)-1]
 	innerTokens := tokens.Lex(valStr)
 
-	var elements []core.Object
+	var elements []*core.Object
 	valid := true
 	minus := false
 
@@ -304,7 +304,7 @@ func parseArray(value string, r *Repl, stack *[]core.Object) ([]core.Object, boo
 			break
 		}
 
-		elements = append(elements, obj)
+		elements = append(elements, &obj)
 		minus = false
 	}
 

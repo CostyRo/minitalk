@@ -14,25 +14,25 @@ type CodeBlockObject struct {
 func NewCodeBlockObject(arguments []string, loc [][][]string, r interfaces.ReplInterface) *CodeBlockObject {
 	obj := core.NewObject(nil, "CodeBlock")
 
-	argsObjs := make([]core.Object, len(arguments))
+	argsObjs := make([]*core.Object, len(arguments))
 	for i, arg := range arguments {
-		argsObjs[i] = NewStringObject(arg).Object
+		argsObjs[i] = &NewStringObject(arg).Object
 	}
 	argsArrayObj := NewArrayObject(argsObjs)
 	obj.Set("arguments", argsArrayObj.Object)
 	obj.Set("no_arguments", int64(len(arguments)), ObjectConstructor)
 
-	locList := make([]core.Object, len(loc))
+	locList := make([]*core.Object, len(loc))
 	for i, innerTokens := range loc {
-		innerList := make([]core.Object, len(innerTokens))
+		innerList := make([]*core.Object, len(innerTokens))
 		for j, pair := range innerTokens {
-			pairObj := NewArrayObject([]core.Object{
-				NewStringObject(pair[0]).Object,
-				NewStringObject(pair[1]).Object,
+			pairObj := NewArrayObject([]*core.Object{
+				&NewStringObject(pair[0]).Object,
+				&NewStringObject(pair[1]).Object,
 			})
-			innerList[j] = pairObj.Object
+			innerList[j] = &pairObj.Object
 		}
-		locList[i] = NewArrayObject(innerList).Object
+		locList[i] = &NewArrayObject(innerList).Object
 	}
 	locArrayObj := NewArrayObject(locList)
 	obj.Set("loc", locArrayObj.Object)
@@ -45,7 +45,7 @@ func NewCodeBlockObject(arguments []string, loc [][][]string, r interfaces.ReplI
 		if !ok {
 			return core.Object{}
 		}
-		locArr := locObj.Self.([]core.Object)
+		locArr := locObj.Self.([]*core.Object)
 
 		argsVal, ok := obj.Get("arguments")
 		if !ok {
@@ -55,7 +55,7 @@ func NewCodeBlockObject(arguments []string, loc [][][]string, r interfaces.ReplI
 		if !ok {
 			return core.Object{}
 		}
-		argsSlice, ok := argsObj.Self.([]core.Object)
+		argsSlice, ok := argsObj.Self.([]*core.Object)
 		if !ok {
 			return core.Object{}
 		}
@@ -69,10 +69,10 @@ func NewCodeBlockObject(arguments []string, loc [][][]string, r interfaces.ReplI
 
 		var locData [][][]string
 		for _, inner := range locArr {
-			innerArr := inner.Self.([]core.Object)
+			innerArr := inner.Self.([]*core.Object)
 			var innerData [][]string
 			for _, pairObj := range innerArr {
-				pairArr := pairObj.Self.([]core.Object)
+				pairArr := pairObj.Self.([]*core.Object)
 				val := pairArr[1].Self.(string)
 				if val == argName {
 					val = ":" + argName

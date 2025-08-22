@@ -1,8 +1,7 @@
-array:=1to:5 reversed
-index:=0to:(array size - 1)
-index do: [
+array:=1to:10 reversed
+0to:(array size - 1) do: [
   :i :x |
-  index do: [ 
+  0to:(array size - 1) do: [ 
     :j :y |
     x:=array at: i.
     y:=array at: j.

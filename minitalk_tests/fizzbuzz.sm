@@ -1,5 +1,4 @@
-fizz:=1to:100
-fizz do: [
+1to:100 do: [
   :x | 
   Transcript show: (
     x mod: 15 == 0

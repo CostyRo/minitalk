@@ -9,6 +9,7 @@ func NewInputHandler() *InputHandler {
 func (h *InputHandler) Complete(input string, promptFn func(string) (string, error)) (string, error) {
 	parensOpen, parensClose := 0, 0
 	brackOpen, brackClose := 0, 0
+	semicolonPending := false
 
 	count := func(s string) {
 		for _, c := range s {
@@ -21,13 +22,19 @@ func (h *InputHandler) Complete(input string, promptFn func(string) (string, err
 				brackOpen++
 			case ']':
 				brackClose++
+			case ';':
+				semicolonPending = true
+			case '.':
+				if semicolonPending {
+					semicolonPending = false
+				}
 			}
 		}
 	}
 
 	count(input)
 
-	for parensOpen > parensClose || brackOpen > brackClose {
+	for parensOpen > parensClose || brackOpen > brackClose || semicolonPending {
 		cont, err := promptFn("... ")
 		if err != nil {
 			return "", err

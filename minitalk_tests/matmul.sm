@@ -1,9 +1,8 @@
-lines:=FileSystem disk referenceTo: 'minitalk_tests/matmul.in' contents splitBy: ''
-index:=0to:(lines size - 1)
+lines:=FileSystem disk referenceTo: 'minitalk_tests/matmul.input' contents splitBy: ''
 isMat1:=true
 mat1:=#()
 mat2:=#()
-index do: [
+0to:(lines size - 1) do: [
   :i |
   line:=lines at: i.
   line eq: '' ifTrue: [
@@ -15,6 +14,65 @@ index do: [
     mat2:=mat2 at: (mat2 size) insert: line
   ]
 ]
+mat2:=mat2 removeAt: 0 at: 1
+mat1:=mat1 map: [
+  :x |
+  x splitBy: ' ' map: [:y | y toInteger]
+]
+mat2:=mat2 map: [
+  :x |
+  x splitBy: ' ' map: [:y | y toInteger]
+]
 
-Transcript show: (mat1 toString)
-Transcript show: (mat2 toString)
+Transcript show: ('Matrix 1:' + nl)
+
+0to:(mat1 size - 1) do: [
+  :i |
+  0to:(mat1 at:1 size - 1) do: [
+    :j |
+    Transcript show: ((mat1 at: i) at: j toString);
+               show: ' '.
+  ].
+  Transcript show: nl
+]
+
+Transcript show: ('Matrix 2:' + nl)
+
+0to:(mat2 size - 1) do: [
+  :i |
+  0to:(mat2 at:1 size - 1) do: [
+    :j |
+    Transcript show: ((mat2 at: i) at: j toString);
+               show: ' '.
+  ].
+  Transcript show: nl
+]
+
+result:=#()
+
+0to:(mat1 size - 1) do: [
+  :i |
+  line:=#().
+  0to:(mat2 size - 1) do: [
+    :j |
+    sum:=0.
+    0to:(mat1 at: 0 size - 1) do: [
+      :k |
+      sum:=sum+(((mat1 at: i) at: k) * ((mat2 at: k) at: j)).
+    ].
+    line:=line at: (line size) insert: sum.
+  ].
+  result:=result at: (result size) insert: line.
+]
+
+Transcript show: ('Result:' + nl)
+
+0to:(result size - 1) do: [
+  :i |
+  0to:(result at:1 size - 1) do: [
+    :j |
+    Transcript show: ((result at: i) at: j toString);
+               show: ' '.
+  ].
+  Transcript show: nl
+]

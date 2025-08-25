@@ -162,6 +162,10 @@ $b==$b,true
 $b==$c,false
 'ana'=='ana',true
 'ana'=='bob',false
+#[]==#[],true
+#[1]==#[],false
+#(#[1 2 3 4] 'four' -4.0 #four $a a #(1 2 3))==#(#[1 2 3 4] 'four' -4.0 #four $a a #(1 2 3)),true
+#(#[1 2 3 4] 'four' -4.0 #four $a a nil #(1 2 3))==#(),false
 
 @ Boolean AND
 true&true,true
@@ -304,7 +308,7 @@ false ifFalse: [0] ifTrue: [1],0
 @ Transcript
 Transcript show: 'a',a
 Transcript show: nl,\n
-Transcript show: 'a'; show: 'b',ab
+Transcript show: 'a'; show: 'b'.,ab
 
 @ Stdin
 stdin nextLine,

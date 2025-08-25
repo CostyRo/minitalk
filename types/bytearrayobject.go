@@ -26,6 +26,24 @@ func NewByteArrayObject(data []byte) *ByteArrayObject {
 		}
 		return nil
 	})
+	obj.Set("eq", func(other core.Object) interface{} {
+		if other.Class != "ByteArray" {
+			return nil
+		}
+		val, ok := other.Self.([]byte)
+		if !ok {
+			return nil
+		}
+		if len(data) != len(val) {
+			return NewBoolObject(false).Object
+		}
+		for i := range data {
+			if data[i] != val[i] {
+				return NewBoolObject(false).Object
+			}
+		}
+		return NewBoolObject(true).Object
+	})
 	obj.Set("size", func() core.Object { return NewIntegerObject(int64(len(data))).Object })
 	obj.Set("reversed", func() core.Object {
 		data := obj.Self.([]byte)

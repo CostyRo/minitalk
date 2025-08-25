@@ -27,6 +27,44 @@ func NewArrayObject(elements []*core.Object) *ArrayObject {
 		}
 		return nil
 	})
+	obj.Set("eq", func(other core.Object) interface{} {
+		if other.Class != "Array" {
+			return nil
+		}
+		val, ok := other.Self.([]*core.Object)
+		if !ok {
+			return nil
+		}
+		if len(elements) != len(val) {
+			return NewBoolObject(false).Object
+		}
+		for i := range elements {
+			if elements[i] == nil || val[i] == nil {
+				if elements[i] != val[i] {
+					return NewBoolObject(false).Object
+				}
+				continue
+			}
+			eqMethod, ok := (*elements[i]).Get("eq")
+			if !ok {
+				return NewBoolObject(false).Object
+			}
+			callable, ok := eqMethod.(func(core.Object) interface{})
+			if !ok {
+				return NewBoolObject(false).Object
+			}
+			res := callable(*val[i])
+			resObj, ok := res.(core.Object)
+			if !ok || resObj.Class != "Bool" {
+				return NewBoolObject(false).Object
+			}
+			resVal, ok := resObj.Self.(bool)
+			if !ok || !resVal {
+				return NewBoolObject(false).Object
+			}
+		}
+		return NewBoolObject(true).Object
+	})
 	obj.Set("size", func() core.Object { return NewIntegerObject(int64(len(elements))).Object })
 	obj.Set("reversed", func() core.Object {
 		elements := obj.Self.([]*core.Object)

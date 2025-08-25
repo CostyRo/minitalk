@@ -1,0 +1,44 @@
+band:=#[0 0 0 1 0 0 0]
+
+1:to:5 do: [
+  :it |
+  it == 1 ifTrue: [
+    Transcript show: ('Iteration 0: ' + (band toString) + nl).
+  ].
+  band:=band at: 0 insert: 0.
+  band:=band at: (band size) insert: 0.
+  newBand:=#[].
+  1to:(band size - 2) do: [
+    :i |
+    triplet:=#[].
+    triplet:=triplet at: (triplet size) insert: (band at: (i - 1)).
+    triplet:=triplet at: (triplet size) insert: (band at: (i)).
+    triplet:=triplet at: (triplet size) insert: (band at: (i + 1)).
+    triplet == #[0 0 0] ifTrue: [
+      newBand:=newBand at: (newBand size) insert: 0
+    ].
+    triplet == #[0 0 1] ifTrue: [
+      newBand:=newBand at: (newBand size) insert: 1
+    ].
+    triplet == #[0 1 0] ifTrue: [
+      newBand:=newBand at: (newBand size) insert: 1
+    ].
+    triplet == #[0 1 1] ifTrue: [
+      newBand:=newBand at: (newBand size) insert: 1
+    ].
+    triplet == #[1 0 0] ifTrue: [
+      newBand:=newBand at: (newBand size) insert: 0
+    ].
+    triplet == #[1 0 1] ifTrue: [
+      newBand:=newBand at: (newBand size) insert: 1
+    ].
+    triplet == #[1 1 0] ifTrue: [
+      newBand:=newBand at: (newBand size) insert: 1
+    ].
+    triplet == #[1 1 1] ifTrue: [
+      newBand:=newBand at: (newBand size) insert: 0
+    ].
+  ].
+  band:=newBand.
+  Transcript show: ('Iteration ' + (it toString) + ': ' + (band toString) + nl).
+]

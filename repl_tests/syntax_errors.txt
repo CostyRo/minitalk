@@ -1,7 +1,7 @@
 a:=1,
 
 -a,SyntaxError: invalid unary minus for variables
-;,SyntaxError: invalid syntax
+;.,SyntaxError: invalid syntax
 :=,SyntaxError: invalid syntax
 +,SyntaxError: invalid syntax
 -,SyntaxError: invalid syntax

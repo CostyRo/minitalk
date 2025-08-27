@@ -1,55 +1,20 @@
-lines:=FileSystem disk referenceTo: 'minitalk_tests/matmul.input' contents splitBy: ''
+file:=FileSystem disk referenceTo: 'minitalk_tests/matmul.input'
+lines:=file contents splitBy: ''
 isMat1:=true
 mat1:=#()
 mat2:=#()
 0to:(lines size - 1) do: [
   :i |
   line:=lines at: i.
-  line eq: '' ifTrue: [
-    isMat1:=false
-  ].
-  isMat1 ifTrue: [
-    mat1:=mat1 at: (mat1 size) insert: line
-  ] ifFalse: [
-    mat2:=mat2 at: (mat2 size) insert: line
-  ]
+  line eq: '' ifTrue: [isMat1:=false].
+  isMat1
+    ifTrue: [mat1:=mat1 at: (mat1 size) insert: line]
+    ifFalse: [mat2:=mat2 at: (mat2 size) insert: line]
 ]
 mat2:=mat2 removeAt: 0 at: 1
-mat1:=mat1 map: [
-  :x |
-  x splitBy: ' ' map: [:y | y toInteger]
-]
-mat2:=mat2 map: [
-  :x |
-  x splitBy: ' ' map: [:y | y toInteger]
-]
-
-Transcript show: ('Matrix 1:' + nl)
-
-0to:(mat1 size - 1) do: [
-  :i |
-  0to:(mat1 at:1 size - 1) do: [
-    :j |
-    Transcript show: ((mat1 at: i) at: j toString);
-               show: ' '.
-  ].
-  Transcript show: nl
-]
-
-Transcript show: ('Matrix 2:' + nl)
-
-0to:(mat2 size - 1) do: [
-  :i |
-  0to:(mat2 at:1 size - 1) do: [
-    :j |
-    Transcript show: ((mat2 at: i) at: j toString);
-               show: ' '.
-  ].
-  Transcript show: nl
-]
-
+mat1:=mat1 map: [:x | x splitBy: ' ' map: [:y | y toInteger]]
+mat2:=mat2 map: [:x | x splitBy: ' ' map: [:y | y toInteger]]
 result:=#()
-
 0to:(mat1 size - 1) do: [
   :i |
   line:=#().
@@ -64,15 +29,11 @@ result:=#()
   ].
   result:=result at: (result size) insert: line.
 ]
-
-Transcript show: ('Result:' + nl)
-
 0to:(result size - 1) do: [
   :i |
   0to:(result at:1 size - 1) do: [
     :j |
-    Transcript show: ((result at: i) at: j toString);
-               show: ' '.
+    Transcript show: ((result at: i) at: j toString); show: ' '.
   ].
   Transcript show: nl
 ]
